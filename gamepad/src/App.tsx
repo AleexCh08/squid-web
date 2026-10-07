@@ -27,8 +27,21 @@ function App() {
   const isWarningRef = useRef(false); // Para no saturar el estado de React en cada tick
 
   useEffect(() => {
+    let reactionTimeout: number;
+
+    // Solo activamos la bomba si la luz es roja, está vivo, y AÚN NO ha presionado el centro
+    if (lightColor === 'RED' && isAlive && !isHoldingBreath) {
+      reactionTimeout = window.setTimeout(() => {
+        setIsAlive(false); // Pasó 1 segundo y no mantuvo la postura -> Eliminado
+      }, 1000);
+    }
+
+    return () => clearTimeout(reactionTimeout);
+  }, [lightColor, isHoldingBreath, isAlive]);
+
+  useEffect(() => {
     let interval: number;
-    
+ 
     if (lightColor === 'RED' && isHoldingBreath) {
       interval = window.setInterval(() => {
         setTensionPoint((prev) => {
@@ -107,7 +120,13 @@ function App() {
   };
 
   const handleStep = (leg: 'L' | 'R') => {
-    if (isStumbled || lightColor === 'RED' || !isAlive) return;
+    if (!isAlive || isStumbled) return;
+
+    // ¡EL CASTIGO REAL! Si el jugador por mal reflejo pisa en luz roja, muere.
+    if (lightColor === 'RED') {
+      setIsAlive(false);
+      return; 
+    }
 
     if (leg === expectedLeg) {
       setExpectedLeg(leg === 'L' ? 'R' : 'L');
@@ -180,7 +199,7 @@ function App() {
           <div 
             onPointerDown={() => handleStep('L')}
             className={`flex-1 border-r border-black/30 flex items-center justify-center transition-all cursor-pointer touch-none select-none
-              ${expectedLeg === 'L' && !isStumbled && lightColor === 'GREEN' ? 'bg-green-600 shadow-[inset_0_0_50px_rgba(34,197,94,0.5)]' : 'bg-white/5 opacity-50'}
+              ${expectedLeg === 'L' && !isStumbled ? 'bg-green-600 shadow-[inset_0_0_50px_rgba(34,197,94,0.5)]' : 'bg-white/5'}
               ${isStumbled ? 'bg-red-800/50 grayscale' : ''}
             `}
           >
@@ -228,7 +247,7 @@ function App() {
           <div 
             onPointerDown={() => handleStep('R')}
             className={`flex-1 border-l border-black/30 flex items-center justify-center transition-all cursor-pointer touch-none select-none
-              ${expectedLeg === 'R' && !isStumbled && lightColor === 'GREEN' ? 'bg-green-600 shadow-[inset_0_0_50px_rgba(34,197,94,0.5)]' : 'bg-white/5 opacity-50'}
+              ${expectedLeg === 'R' && !isStumbled ? 'bg-green-600 shadow-[inset_0_0_50px_rgba(34,197,94,0.5)]' : 'bg-white/5'}
               ${isStumbled ? 'bg-red-800/50 grayscale' : ''}
             `}
           >

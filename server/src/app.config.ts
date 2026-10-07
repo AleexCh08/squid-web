@@ -10,7 +10,7 @@ import {
 /**
  * Import your Room files
  */
-import { MyRoom } from "./rooms/MyRoom.js";
+import { SquidRoom } from "./rooms/SquidRoom.js";
 
 const server = defineServer({
 
@@ -18,7 +18,7 @@ const server = defineServer({
    * Define your room handlers:
    */
   rooms: {
-    my_room: defineRoom(MyRoom),
+    squid_room: defineRoom(SquidRoom)
   },
 
   /**

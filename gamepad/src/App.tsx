@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import * as Colyseus from 'colyseus.js';
 
-// Conexión dinámica: busca el servidor en la misma IP de donde cargó la página
-const client = new Colyseus.Client(`ws://${window.location.hostname}:2567`);
+const client = new Colyseus.Client(`ws://localhost:2567`);
 
 function App() {
   const [room, setRoom] = useState<Colyseus.Room | null>(null);
@@ -10,12 +9,11 @@ function App() {
   const [isAlive, setIsAlive] = useState(true);
   
   const [gameStatus, setGameStatus] = useState('LOBBY'); 
-  const [lightColor, setLightColor] = useState('RED'); // El juego real arranca en rojo
+  const [lightColor, setLightColor] = useState('RED');
 
   const [expectedLeg, setExpectedLeg] = useState<'L' | 'R'>('L');
   const [isStumbled, setIsStumbled] = useState(false); 
   
-  // === EQUILIBRIO Y PENALIZACIÓN ===
   const [isHoldingBreath, setIsHoldingBreath] = useState(false);
   const [tensionPoint, setTensionPoint] = useState(0); 
   const [showWarning, setShowWarning] = useState(false); 

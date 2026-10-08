@@ -60,11 +60,11 @@ export class SquidRoom extends Room {
     
   }
 
-  onJoin(client: Client, options: any) {
+  onJoin(client: Client, options: any = {}) {
     const state = this.state as GameState;
     const newPlayer = new Player();
     newPlayer.id = client.sessionId;
-    newPlayer.name = options.name || "Jugador " + Math.floor(Math.random() * 1000); 
+    newPlayer.name = options?.name || "Jugador " + Math.floor(Math.random() * 1000); 
     
     state.players.set(client.sessionId, newPlayer);
     console.log(`[JOIN] ${newPlayer.name} ha entrado.`);

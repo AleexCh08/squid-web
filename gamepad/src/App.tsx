@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import * as Colyseus from 'colyseus.js';
+import { Client, Room } from 'colyseus.js';
 
-const client = new Colyseus.Client(`ws://localhost:2567`);
+const client = new Client(`ws://192.168.1.6:2567`);
 
 function App() {
-  const [room, setRoom] = useState<Colyseus.Room | null>(null);
+  const [room, setRoom] = useState<Room | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [isAlive, setIsAlive] = useState(true);
   
@@ -99,7 +99,31 @@ function App() {
     enterFullScreen();
 
     try {
-      const newRoom = await client.joinOrCreate('squid_room', { name: playerName });
+      // 1. Saltamos a Vite y hacemos la petición cruda al servidor
+      const response = await fetch(`http://192.168.1.6:2567/matchmake/joinOrCreate/squid_room`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: playerName })
+      });
+      
+      if (!response.ok) throw new Error("El servidor rechazó la conexión");
+      
+      let data = await response.json();
+
+      // 2. Le damos a la librería exactamente la estructura que exige para no estallar
+      if (!data.room) {
+        data = {
+          sessionId: data.sessionId,
+          room: {
+            name: data.name,
+            roomId: data.roomId,
+            processId: data.processId
+          }
+        };
+      }
+
+      // 3. Forzamos la entrada con los datos formateados
+      const newRoom = await client.consumeSeatReservation(data);
       setRoom(newRoom);
       
       newRoom.onStateChange((state) => {

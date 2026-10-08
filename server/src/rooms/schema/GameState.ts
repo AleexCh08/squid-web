@@ -1,9 +1,33 @@
-import { Schema, MapSchema, type } from "@colyseus/schema";
-import { Player } from "./Player.js";
+import { Schema, MapSchema, defineTypes } from "@colyseus/schema";
 
-export class GameState extends Schema {
-  @type("string") status: string = "LOBBY";
-  @type("string") light: string = "RED";
-  
-  @type({ map: Player }) players = new MapSchema<Player>();
+// 1. Clase Player pura
+export class Player extends Schema {
+  id: string = "";
+  name: string = "";
+  isAlive: boolean = true;
+  isMoving: boolean = false;
+  zPos: number = 0;
 }
+
+// Registro manual invulnerable al compilador
+defineTypes(Player, {
+  id: "string",
+  name: "string",
+  isAlive: "boolean",
+  isMoving: "boolean",
+  zPos: "number"
+});
+
+// 2. Clase GameState pura
+export class GameState extends Schema {
+  status: string = "LOBBY";
+  light: string = "RED";
+  players = new MapSchema<Player>();
+}
+
+// Registro manual invulnerable al compilador
+defineTypes(GameState, {
+  status: "string",
+  light: "string",
+  players: { map: Player }
+});

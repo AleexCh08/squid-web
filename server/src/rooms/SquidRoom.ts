@@ -18,6 +18,7 @@ export class GameState extends Schema {
 
 export class SquidRoom extends Room {
   private distancePerStep = 2.0; 
+  private lightTimeout?: NodeJS.Timeout;
 
   onCreate(options: any) {
     this.setState(new GameState());
@@ -45,13 +46,56 @@ export class SquidRoom extends Room {
     this.onMessage("HOST_START_GAME", (client, message) => {
       const state = this.state as GameState;
       state.status = "PLAYING";
-      state.light = "RED"; 
+      
+      // 1. BLOQUEAR LA SALA: Nadie más puede unirse si la partida empezó
+      this.lock(); 
+      
+      // 2. Iniciar el ciclo automático de luces (empieza en verde para moverse)
+      state.light = "GREEN";
+      this.runLightCycle();
+    });
+
+    this.onMessage("RESTART_GAME", (client, message) => {
+      const state = this.state as GameState;
+      
+      // Detener el ciclo de luces
+      if (this.lightTimeout) clearTimeout(this.lightTimeout);
+      
+      // Resetear el estado general
+      state.status = "LOBBY";
+      state.light = "RED";
+      
+      // Revivir a todos los jugadores en sala y devolverlos a la línea de salida
+      state.players.forEach(player => {
+        player.isAlive = true;
+        player.zPos = 0;
+      });
+      
+      // DESBLOQUEAR LA SALA: Permitir nuevos ingresos
+      this.unlock(); 
     });
 
     this.onMessage("CHANGE_LIGHT", (client, data: { light: string }) => {
       const state = this.state as GameState;
       state.light = data.light;
     });
+  }
+
+  private runLightCycle() {
+    const state = this.state as GameState;
+    if (state.status !== "PLAYING") return; // Si se reinicia, el ciclo muere
+
+    if (state.light === "RED") {
+      state.light = "GREEN";
+      // Luz Verde: Duración aleatoria entre 2 y 5 segundos
+      const greenTime = Math.random() * 3000 + 2000;
+      this.lightTimeout = setTimeout(() => this.runLightCycle(), greenTime);
+    } else {
+      state.light = "RED";
+      // Luz Roja: Duración aleatoria asegurando un mínimo de 3 segundos (entre 3s y 6s)
+      const redTime = Math.random() * 3000 + 3000; 
+      this.lightTimeout = setTimeout(() => this.runLightCycle(), redTime);
+    }
   }
 
   onJoin(client: Client, options: any = {}) {

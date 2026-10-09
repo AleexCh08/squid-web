@@ -73,14 +73,11 @@ function App() {
   }, []);
 
   const startGame = () => {
-    if (room) {
-      room.send("CHANGE_LIGHT", { light: "GREEN" }); // Apagamos la trampa
-      room.send("HOST_START_GAME"); // Desbloqueamos los gamepads
-    }
+    if (room) room.send("HOST_START_GAME"); // El servidor ahora hace el resto
   };
 
-  const toggleLight = (color: string) => {
-    if (room) room.send("CHANGE_LIGHT", { light: color });
+  const restartGame = () => {
+    if (room) room.send("RESTART_GAME");
   };
 
   return (
@@ -96,11 +93,10 @@ function App() {
         </button>
         
         <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
-          <button onClick={() => toggleLight("GREEN")} style={{ flex: 1, padding: '10px', background: '#90ee90', cursor: 'pointer', border: 'none', color: 'black', fontWeight: 'bold' }}>
-            LUZ VERDE
-          </button>
-          <button onClick={() => toggleLight("RED")} style={{ flex: 1, padding: '10px', background: '#dc3545', color: 'white', cursor: 'pointer', border: 'none', fontWeight: 'bold' }}>
-            LUZ ROJA
+          <button 
+            onClick={restartGame} 
+            style={{ flex: 1, padding: '10px', background: '#ffc107', cursor: 'pointer', border: 'none', color: 'black', fontWeight: 'bold' }}>
+            REINICIAR PARTIDA
           </button>
         </div>
         

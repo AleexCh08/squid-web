@@ -106,6 +106,9 @@ function App() {
         body: JSON.stringify({ name: playerName })
       });
       
+      if (response.status === 423 || response.status === 409) {
+        throw new Error("La partida ya está en curso, espera a que termine.");
+      }
       if (!response.ok) throw new Error("El servidor rechazó la conexión");
       
       let data = await response.json();
@@ -129,11 +132,26 @@ function App() {
       newRoom.onStateChange((state) => {
         setGameStatus(state.status);
         setLightColor(state.light);
+
+        // Detectar si MI jugador específicamente murió para trancar mi pantalla
+        const me = state.players.get(data.sessionId);
+        if (me && !me.isAlive) {
+          setGameStatus("ELIMINATED");
+        }
       });
     } catch (error) {
       console.error("Error al conectar:", error);
       alert("No se pudo conectar al servidor. Verifica estar en la misma red Wi-Fi y que el host esté encendido.");
     }
+  };
+
+  const leaveGame = () => {
+    if (room) {
+      room.leave(); // Cierra la conexión del socket
+    }
+    setRoom(null);
+    setGameStatus("LOBBY");
+    // Si tienes un estado para ocultar el formulario (ej. setIsConnected), devuélvelo a false aquí
   };
 
   const handleStep = (leg: 'L' | 'R') => {
@@ -192,9 +210,9 @@ function App() {
 
   if (!isAlive) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-red-900 p-6">
-        <h1 className="text-6xl font-black text-white mb-4">ELIMINADO</h1>
-        <p className="text-gray-300">Espera a la próxima partida.</p>
+      <div className="eliminated-screen">
+        <h1>HAS SIDO ELIMINADO</h1>
+        <button onClick={leaveGame} className="btn-volver">Volver al Inicio</button>
       </div>
     );
   }

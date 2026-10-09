@@ -150,11 +150,20 @@ function App() {
     }
   }, [gameStatus]);
 
-  const startGame = () => { if (room) room.send("HOST_START_GAME"); };
+  const startGame = () => { 
+    if (room) room.send("HOST_START_GAME"); 
+    // Disparar pantalla completa al interactuar con el botón
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  };
   const restartGame = () => { if (room) room.send("RESTART_GAME"); };
 
-  // Lógica de visibilidad del panel (Solo aparece en Lobby o al terminar)
   const isPanelVisible = gameStatus === "LOBBY" || gameStatus === "GAME_OVER";
+  
+  // Calcular si hubo ganadores para alterar el título del panel
+  const aliveCount = Object.values(players).filter((p: any) => p.isAlive).length;
+  const hasWinner = aliveCount > 0;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -163,7 +172,11 @@ function App() {
       {isPanelVisible && (
         <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, background: 'rgba(0,0,0,0.9)', padding: '25px', color: 'white', borderRadius: '12px', fontFamily: 'sans-serif', border: '1px solid #444' }}>
           <h2 style={{ margin: '0 0 15px 0', color: '#ffc107' }}>Control Maestro</h2>
-          {gameStatus === "GAME_OVER" && <h3 style={{ color: '#dc3545', marginTop: 0 }}>PARTIDA FINALIZADA</h3>}
+          {gameStatus === "GAME_OVER" && (
+            <h3 style={{ color: hasWinner ? '#28a745' : '#dc3545', marginTop: 0, fontSize: '24px' }}>
+              {hasWinner ? "¡HAY UN GANADOR!" : "TODOS ELIMINADOS"}
+            </h3>
+          )}
           
           {gameStatus === "LOBBY" ? (
             <button onClick={startGame} style={{ padding: '15px', width: '100%', cursor: 'pointer', background: '#28a745', color: 'white', border: 'none', fontWeight: 'bold', fontSize: '18px', borderRadius: '6px' }}>
@@ -185,7 +198,7 @@ function App() {
         </div>
       )}
       {gameStatus === "PLAYING" && lightColor === "GREEN" && countdown === null && (
-        <div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, color: '#28a745', fontSize: '80px', fontWeight: '900', textShadow: '0px 0px 10px black', animation: 'fadeOut 2s forwards' }}>
+        <div style={{ position: 'absolute', top: '35%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#28a745', fontSize: '120px', fontWeight: '900', textShadow: '0px 0px 20px black', animation: 'fadeOut 2s forwards' }}>
           ¡CORRE!
         </div>
       )}
@@ -209,15 +222,44 @@ function App() {
           <meshStandardMaterial color="#E91E63" />
         </mesh>
 
-        {/* Paredes Laterales */}
+        {/* Muros Perimetrales (Habitación de Cielo Falso) */}
         <mesh position={[-30, 10, 50]}>
-          <boxGeometry args={[2, 20, 140]} />
-          <meshStandardMaterial color="#b5e2fa" /> {/* Muros con color cielo falso */}
+          <boxGeometry args={[2, 20, 160]} />
+          <meshStandardMaterial color="#87CEEB" roughness={1} /> 
         </mesh>
         <mesh position={[30, 10, 50]}>
-          <boxGeometry args={[2, 20, 140]} />
-          <meshStandardMaterial color="#b5e2fa" />
+          <boxGeometry args={[2, 20, 160]} />
+          <meshStandardMaterial color="#87CEEB" roughness={1} />
         </mesh>
+        {/* Pared de Salida (Atrás de los jugadores) */}
+        <mesh position={[0, 10, -20]}>
+          <boxGeometry args={[60, 20, 2]} />
+          <meshStandardMaterial color="#87CEEB" roughness={1} /> 
+        </mesh>
+        {/* Pared Frontal (Detrás de la Muñeca) */}
+        <mesh position={[0, 10, 130]}>
+          <boxGeometry args={[60, 20, 2]} />
+          <meshStandardMaterial color="#87CEEB" roughness={1} /> 
+        </mesh>
+
+        {/* Guardias de Élite Rojos */}
+        <group position={[-8, 2, 98]}>
+          <boxGeometry args={[2, 4, 2]} />
+          <meshStandardMaterial color="#E91E63" />
+          {/* Máscara Negra */}
+          <mesh position={[0, 1, -1.01]}>
+            <planeGeometry args={[1.5, 1.5]} />
+            <meshBasicMaterial color="#111" />
+          </mesh>
+        </group>
+        <group position={[8, 2, 98]}>
+          <boxGeometry args={[2, 4, 2]} />
+          <meshStandardMaterial color="#E91E63" />
+          <mesh position={[0, 1, -1.01]}>
+            <planeGeometry args={[1.5, 1.5]} />
+            <meshBasicMaterial color="#111" />
+          </mesh>
+        </group>
 
         {/* Componente Muñeca y Árbol */}
         <Doll light={lightColor} />

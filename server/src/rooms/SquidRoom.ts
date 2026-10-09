@@ -26,7 +26,9 @@ export class SquidRoom extends Room {
     if (state.status !== "PLAYING") return;
 
     let anyAlive = false;
-    state.players.forEach(p => { if (p.isAlive) anyAlive = true; });
+    state.players.forEach(p => { 
+      if (p.name !== "HOST_ADMIN" && p.isAlive) anyAlive = true; 
+    });
 
     // Si todos murieron, cerramos el juego
     if (!anyAlive) {

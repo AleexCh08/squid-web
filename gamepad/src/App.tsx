@@ -92,6 +92,16 @@ function App() {
     else if (doc.msRequestFullscreen) doc.msRequestFullscreen(); 
   };
 
+  useEffect(() => {
+    if (lightColor === 'GREEN') {
+      setIsHoldingBreath(false);     // Soltamos el aire a la fuerza
+      setTensionPoint(0);            // Centramos el punto
+      currentDrag.current = 0;       // Reseteamos la fuerza del dedo
+      outCenterTimer.current = 0;    // Reseteamos el castigo
+      setShowWarning(false);         // Ocultamos la advertencia
+    }
+  }, [lightColor]);
+
   const joinGame = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!playerName.trim()) return;
@@ -133,10 +143,18 @@ function App() {
         setGameStatus(state.status);
         setLightColor(state.light);
 
-        // Detectar si MI jugador específicamente murió para trancar mi pantalla
         const me = state.players.get(data.sessionId);
-        if (me && !me.isAlive) {
-          setGameStatus("ELIMINATED");
+        if (me) {
+          // 1. Obligamos a React a acatar si el servidor dice que estamos vivos o muertos
+          setIsAlive(me.isAlive);
+          
+          if (!me.isAlive) {
+            setGameStatus("ELIMINATED");
+          } else if (state.status === "LOBBY") {
+            // 2. Si el servidor reinició la partida (estamos vivos y en LOBBY), limpiamos los tropiezos
+            setExpectedLeg('L');
+            setIsStumbled(false);
+          }
         }
       });
     } catch (error) {
@@ -149,9 +167,15 @@ function App() {
     if (room) {
       room.leave(); // Cierra la conexión del socket
     }
+    // Purga absoluta de todas las variables locales al volver al formulario
     setRoom(null);
     setGameStatus("LOBBY");
-    // Si tienes un estado para ocultar el formulario (ej. setIsConnected), devuélvelo a false aquí
+    setIsAlive(true);
+    setExpectedLeg('L');
+    setIsStumbled(false);
+    setIsHoldingBreath(false);
+    setTensionPoint(0);
+    setShowWarning(false);
   };
 
   const handleStep = (leg: 'L' | 'R') => {
@@ -208,11 +232,18 @@ function App() {
     );
   }
 
-  if (!isAlive) {
+  if (gameStatus === "ELIMINATED" || !isAlive) {
     return (
-      <div className="eliminated-screen">
-        <h1>HAS SIDO ELIMINADO</h1>
-        <button onClick={leaveGame} className="btn-volver">Volver al Inicio</button>
+      <div className="flex flex-col items-center justify-center h-screen bg-red-950 p-6 text-center">
+        <h1 className="text-5xl font-black text-red-500 mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
+          HAS SIDO ELIMINADO
+        </h1>
+        <button 
+          onClick={leaveGame} 
+          className="px-8 py-4 bg-white text-red-950 font-bold rounded-lg text-xl uppercase tracking-wider"
+        >
+          Volver al Inicio
+        </button>
       </div>
     );
   }

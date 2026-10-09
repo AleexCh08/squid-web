@@ -17,7 +17,7 @@ export class GameState extends Schema {
 }
 
 export class SquidRoom extends Room {
-  private distancePerStep = 2.0; 
+  private distancePerStep = 0.2; 
   private lightTimeout?: NodeJS.Timeout;
 
   onCreate(options: any) {
@@ -52,7 +52,7 @@ export class SquidRoom extends Room {
       
       // 2. Iniciar el ciclo automático de luces (empieza en verde para moverse)
       state.light = "GREEN";
-      this.runLightCycle();
+      this.lightTimeout = setTimeout(() => this.runLightCycle(), 6000);
     });
 
     this.onMessage("RESTART_GAME", (client, message) => {

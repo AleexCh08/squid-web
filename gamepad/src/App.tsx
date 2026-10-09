@@ -249,6 +249,22 @@ function App() {
     );
   }
 
+  if (isAlive && gameStatus === "GAME_OVER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-yellow-600 p-6 text-center">
+        <h1 className="text-6xl font-black text-white mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-bounce">
+          ¡GANASTE!
+        </h1>
+        <p className="text-yellow-200 text-xl font-bold mb-8 uppercase tracking-widest">
+          Sobreviviste al juego
+        </p>
+        <button onClick={leaveGame} className="px-8 py-4 bg-white text-yellow-900 font-bold rounded-lg text-xl uppercase tracking-wider shadow-lg">
+          Volver al Inicio
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <div id="portrait-warning" className="fixed inset-0 bg-black z-50 flex-col items-center justify-center p-6 text-center">

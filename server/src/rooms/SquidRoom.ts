@@ -61,6 +61,14 @@ export class SquidRoom extends Room {
         state.status = "GAME_OVER";
         if (this.lightTimeout) clearTimeout(this.lightTimeout);
         this.unlock();
+        
+        // Ejecución masiva: Eliminamos a todos menos al ganador y al Host
+        state.players.forEach((p, sessionId) => {
+          if (p.name !== "HOST_ADMIN" && sessionId !== client.sessionId) {
+            p.isAlive = false; 
+          }
+        });
+        
         console.log(`¡Jugador ${player.name} ha ganado!`);
       }
     });

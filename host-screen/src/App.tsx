@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Sky, Text } from '@react-three/drei';
+import { Sky, Text, useGLTF, Clone, Stats } from '@react-three/drei';
 import * as THREE from 'three';
 import { Client, Room } from 'colyseus.js';
 
@@ -46,10 +46,12 @@ function Doll({ light }: { light: string }) {
   );
 }
 
+// MODELO GEOMÉTRICO (COMENTADO PARA RESPALDO)
+/*
 function PlayerCharacter() {
   return (
     <group position={[0, 1, 0]}>
-      {/* Piernas */}
+
       <mesh position={[-0.25, -0.5, 0]}>
         <cylinderGeometry args={[0.15, 0.15, 1]} />
         <meshStandardMaterial color="#00796B" />
@@ -58,21 +60,34 @@ function PlayerCharacter() {
         <cylinderGeometry args={[0.15, 0.15, 1]} />
         <meshStandardMaterial color="#00796B" />
       </mesh>
-      {/* Torso (Chándal verde) */}
+
       <mesh position={[0, 0.4, 0]}>
         <cylinderGeometry args={[0.35, 0.35, 1]} />
         <meshStandardMaterial color="#009688" />
       </mesh>
-      {/* Detalle blanco del chándal */}
+
       <mesh position={[0, 0.4, 0.36]}>
         <planeGeometry args={[0.15, 1]} />
         <meshBasicMaterial color="white" />
       </mesh>
-      {/* Cabeza */}
+
       <mesh position={[0, 1.1, 0]}>
         <sphereGeometry args={[0.3]} />
         <meshStandardMaterial color="#FFCCBC" />
       </mesh>
+    </group>
+  );
+} 
+*/
+useGLTF.preload('/player.glb');
+function GLTFPlayer() {
+  // Extraemos la escena estática del archivo
+  const { scene } = useGLTF('/player.glb');
+  
+  return (
+    // scale=[1,1,1] es la escala original. Si el modelo se ve gigante o microscópico, ajusta estos números (ej: [0.5, 0.5, 0.5])
+    <group position={[0, 0, 0]} scale={[2.3, 2.3, 2.3]}>
+      <Clone object={scene} castShadow />
     </group>
   );
 }
@@ -246,80 +261,84 @@ function App() {
 
       {/* RENDERIZADO 3D */}
       <Canvas camera={{ position: [0, 8, -20], fov: 60 }}>
-        <CameraRig players={players} />
-        <Sky sunPosition={[100, 20, 100]} turbidity={0.5} />
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[10, 20, 5]} intensity={1.5} castShadow />
+        <Stats />
+        <Suspense fallback={null}>  
+          <CameraRig players={players} />
+          <Sky sunPosition={[100, 20, 100]} turbidity={0.5} />
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[10, 20, 5]} intensity={1.5} castShadow />
 
-        {/* Suelo Principal */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 50]}>
-          <planeGeometry args={[60, 140]} />
-          <meshStandardMaterial color="#d4a373" roughness={1} />
-        </mesh>
-
-        {/* Líneas de Demarcación */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
-          <planeGeometry args={[60, 1]} />
-          <meshStandardMaterial color="#ffffff" /> {/* Línea de salida */}
-        </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 100]}>
-          <planeGeometry args={[60, 3]} />
-          <meshStandardMaterial color="#E91E63" /> {/* Línea de Meta */}
-        </mesh>
-
-        {/* Muros Perimetrales (Cielo Falso) y Nubes */}
-        <mesh position={[-30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-        <mesh position={[30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-        <mesh position={[0, 10, -20]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-        <mesh position={[0, 10, 130]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-        <SceneryDecals />
-
-        {/* Guardias de Élite Rojos */}
-        <group position={[-8, 2, 105]}>
-          <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
-          <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
-          {/* Símbolo Círculo */}
-          <mesh position={[0, 1, -1.02]}>
-            <torusGeometry args={[0.3, 0.06, 16, 32]} />
-            <meshBasicMaterial color="black" />
+          {/* Suelo Principal */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 50]}>
+            <planeGeometry args={[60, 140]} />
+            <meshStandardMaterial color="#d4a373" roughness={1} />
           </mesh>
-        </group>
-        <group position={[8, 2, 105]}>
-          <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
-          <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
-          {/* Símbolo Cuadrado (Toroide de 4 segmentos rotado 45 grados) */}
-          <mesh position={[0, 1, -1.02]} rotation={[0, 0, Math.PI / 4]}>
-            <torusGeometry args={[0.35, 0.06, 4, 4]} />
-            <meshBasicMaterial color="black" />
+
+          {/* Líneas de Demarcación */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+            <planeGeometry args={[60, 1]} />
+            <meshStandardMaterial color="#ffffff" /> {/* Línea de salida */}
           </mesh>
-        </group>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 100]}>
+            <planeGeometry args={[60, 3]} />
+            <meshStandardMaterial color="#E91E63" /> {/* Línea de Meta */}
+          </mesh>
 
-        {/* Muñeca */}
-        <Doll light={lightColor} />
+          {/* Muros Perimetrales (Cielo Falso) y Nubes */}
+          <mesh position={[-30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+          <mesh position={[30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+          <mesh position={[0, 10, -20]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+          <mesh position={[0, 10, 130]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+          <SceneryDecals />
 
-        {/* Renderizado de Jugadores (Nuevos Muñequitos) */}
-        {Object.entries(players).map(([sessionId, player]: [string, any], index: number) => {
-          if (!player.isAlive) return null;
-          const total = Object.keys(players).length;
-          const xPos = (index - (total - 1) / 2) * 3; // Separación ampliada a 3
+          {/* Guardias de Élite Rojos */}
+          <group position={[-8, 2, 105]}>
+            <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
+            <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
+            {/* Símbolo Círculo */}
+            <mesh position={[0, 1, -1.02]}>
+              <torusGeometry args={[0.3, 0.06, 16, 32]} />
+              <meshBasicMaterial color="black" />
+            </mesh>
+          </group>
+          <group position={[8, 2, 105]}>
+            <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
+            <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
+            {/* Símbolo Cuadrado (Toroide de 4 segmentos rotado 45 grados) */}
+            <mesh position={[0, 1, -1.02]} rotation={[0, 0, Math.PI / 4]}>
+              <torusGeometry args={[0.35, 0.06, 4, 4]} />
+              <meshBasicMaterial color="black" />
+            </mesh>
+          </group>
 
-          return (
-            <group key={sessionId} position={[xPos, 0, player.zPos || 0]}>
-              <PlayerCharacter />
-              <Text 
-                position={[0, 2.8, 0]} 
-                rotation={[0, Math.PI, 0]} 
-                fontSize={0.5} 
-                color="white" 
-                outlineWidth={0.05} 
-                outlineColor="black" 
-                fontWeight="bold"
-              >
-                {player.name || "JUGADOR"}
-              </Text>
-            </group>
-          );
-        })}
+          {/* Muñeca */}
+          <Doll light={lightColor} />
+
+          {/* Renderizado de Jugadores (Nuevos Muñequitos) */}
+          {Object.entries(players).map(([sessionId, player]: [string, any], index: number) => {
+            if (!player.isAlive) return null;
+            const total = Object.keys(players).length;
+            const xPos = (index - (total - 1) / 2) * 3; // Separación ampliada a 3
+
+            return (
+              <group key={sessionId} position={[xPos, 0, player.zPos || 0]}>
+                {/*<PlayerCharacter />*/}
+                <GLTFPlayer />
+                <Text 
+                  position={[0, 2.8, 0]} 
+                  rotation={[0, Math.PI, 0]} 
+                  fontSize={0.5} 
+                  color="white" 
+                  outlineWidth={0.05} 
+                  outlineColor="black" 
+                  fontWeight="bold"
+                >
+                  {player.name || "JUGADOR"}
+                </Text>
+              </group>
+            );
+          })}
+        </Suspense>
       </Canvas>
       
       {/* CSS inyectado para la animación de desvanecimiento del ¡CORRE! */}

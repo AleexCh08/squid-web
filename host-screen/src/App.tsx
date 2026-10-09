@@ -8,51 +8,82 @@ import { Client, Room } from 'colyseus.js';
 function Doll({ light }: { light: string }) {
   const headRef = useRef<THREE.Group>(null);
 
-  // La muñeca mira a los jugadores (Math.PI) en rojo, o al árbol (0) en verde
-  const targetRotation = light === 'RED' ? Math.PI : 0;
+  // La muñeca mira a los jugadores si es ROJO o ADVERTENCIA
+  const targetRotation = (light === 'RED' || light === 'WARNING') ? Math.PI : 0;
 
   useFrame(() => {
     if (headRef.current) {
-      // Interpolación lineal para que el giro sea rápido pero mecánico (como un servo motor)
-      headRef.current.rotation.y = THREE.MathUtils.lerp(headRef.current.rotation.y, targetRotation, 0.2);
+      headRef.current.rotation.y = THREE.MathUtils.lerp(headRef.current.rotation.y, targetRotation, 0.25);
     }
   });
 
   return (
     <group position={[0, 0, 110]}>
-      {/* Tronco del Árbol */}
+      {/* Árbol y Refugio */}
       <mesh position={[6, 5, 0]}>
         <cylinderGeometry args={[0.5, 0.8, 10]} />
         <meshStandardMaterial color="#4E342E" />
       </mesh>
-      {/* Copas del Árbol */}
       <mesh position={[6, 12, 0]}>
         <sphereGeometry args={[4]} />
         <meshStandardMaterial color="#2E7D32" />
       </mesh>
 
-      {/* Cuerpo de la Muñeca */}
+      {/* Cuerpo y Cabeza de la Muñeca */}
       <mesh position={[0, 4, 0]}>
         <cylinderGeometry args={[1, 2, 8]} />
-        <meshStandardMaterial color="#FF9800" /> {/* Vestido Naranja */}
+        <meshStandardMaterial color="#FF9800" />
       </mesh>
-      
-      {/* Cabeza Pivotante */}
       <group ref={headRef} position={[0, 9, 0]}>
         <mesh>
           <sphereGeometry args={[1.5]} />
-          <meshStandardMaterial color="#FFCCBC" /> {/* Piel */}
+          <meshStandardMaterial color="#FFCCBC" />
         </mesh>
-        {/* Ojos */}
-        <mesh position={[-0.5, 0.2, 1.4]}>
-          <sphereGeometry args={[0.2]} />
-          <meshBasicMaterial color="black" />
-        </mesh>
-        <mesh position={[0.5, 0.2, 1.4]}>
-          <sphereGeometry args={[0.2]} />
-          <meshBasicMaterial color="black" />
-        </mesh>
+        <mesh position={[-0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshBasicMaterial color="black" /></mesh>
+        <mesh position={[0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshBasicMaterial color="black" /></mesh>
       </group>
+    </group>
+  );
+}
+
+function PlayerCharacter() {
+  return (
+    <group position={[0, 1, 0]}>
+      {/* Piernas */}
+      <mesh position={[-0.25, -0.5, 0]}>
+        <cylinderGeometry args={[0.15, 0.15, 1]} />
+        <meshStandardMaterial color="#00796B" />
+      </mesh>
+      <mesh position={[0.25, -0.5, 0]}>
+        <cylinderGeometry args={[0.15, 0.15, 1]} />
+        <meshStandardMaterial color="#00796B" />
+      </mesh>
+      {/* Torso (Chándal verde) */}
+      <mesh position={[0, 0.4, 0]}>
+        <cylinderGeometry args={[0.35, 0.35, 1]} />
+        <meshStandardMaterial color="#009688" />
+      </mesh>
+      {/* Detalle blanco del chándal */}
+      <mesh position={[0, 0.4, 0.36]}>
+        <planeGeometry args={[0.15, 1]} />
+        <meshBasicMaterial color="white" />
+      </mesh>
+      {/* Cabeza */}
+      <mesh position={[0, 1.1, 0]}>
+        <sphereGeometry args={[0.3]} />
+        <meshStandardMaterial color="#FFCCBC" />
+      </mesh>
+    </group>
+  );
+}
+
+function SceneryDecals() {
+  return (
+    <group>
+      {/* Nubes simples pintadas en las paredes */}
+      <mesh position={[-29, 14, 40]}><sphereGeometry args={[3, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
+      <mesh position={[-29, 15, 83]}><sphereGeometry args={[2.5, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
+      <mesh position={[29, 13, 80]}><sphereGeometry args={[4, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
     </group>
   );
 }
@@ -216,67 +247,54 @@ function App() {
           <meshStandardMaterial color="#d4a373" roughness={1} />
         </mesh>
 
-        {/* Línea de Meta (Z = 100) */}
+        {/* Líneas de Demarcación */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+          <planeGeometry args={[60, 1]} />
+          <meshStandardMaterial color="#ffffff" /> {/* Línea de salida */}
+        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 100]}>
           <planeGeometry args={[60, 3]} />
-          <meshStandardMaterial color="#E91E63" />
+          <meshStandardMaterial color="#E91E63" /> {/* Línea de Meta */}
         </mesh>
 
-        {/* Muros Perimetrales (Habitación de Cielo Falso) */}
-        <mesh position={[-30, 10, 50]}>
-          <boxGeometry args={[2, 20, 160]} />
-          <meshStandardMaterial color="#87CEEB" roughness={1} /> 
-        </mesh>
-        <mesh position={[30, 10, 50]}>
-          <boxGeometry args={[2, 20, 160]} />
-          <meshStandardMaterial color="#87CEEB" roughness={1} />
-        </mesh>
-        {/* Pared de Salida (Atrás de los jugadores) */}
-        <mesh position={[0, 10, -20]}>
-          <boxGeometry args={[60, 20, 2]} />
-          <meshStandardMaterial color="#87CEEB" roughness={1} /> 
-        </mesh>
-        {/* Pared Frontal (Detrás de la Muñeca) */}
-        <mesh position={[0, 10, 130]}>
-          <boxGeometry args={[60, 20, 2]} />
-          <meshStandardMaterial color="#87CEEB" roughness={1} /> 
-        </mesh>
+        {/* Muros Perimetrales (Cielo Falso) y Nubes */}
+        <mesh position={[-30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+        <mesh position={[30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+        <mesh position={[0, 10, -20]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+        <mesh position={[0, 10, 130]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
+        <SceneryDecals />
 
-        {/* Guardias de Élite Rojos */}
+        {/* Guardias de Élite Rojos (Corregidos) */}
         <group position={[-8, 2, 98]}>
-          <boxGeometry args={[2, 4, 2]} />
-          <meshStandardMaterial color="#E91E63" />
-          {/* Máscara Negra */}
-          <mesh position={[0, 1, -1.01]}>
-            <planeGeometry args={[1.5, 1.5]} />
-            <meshBasicMaterial color="#111" />
-          </mesh>
+          <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
+          <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
         </group>
         <group position={[8, 2, 98]}>
-          <boxGeometry args={[2, 4, 2]} />
-          <meshStandardMaterial color="#E91E63" />
-          <mesh position={[0, 1, -1.01]}>
-            <planeGeometry args={[1.5, 1.5]} />
-            <meshBasicMaterial color="#111" />
-          </mesh>
+          <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
+          <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
         </group>
 
-        {/* Componente Muñeca y Árbol */}
+        {/* Muñeca */}
         <Doll light={lightColor} />
 
-        {/* Jugadores */}
+        {/* Renderizado de Jugadores (Nuevos Muñequitos) */}
         {Object.entries(players).map(([sessionId, player]: [string, any], index: number) => {
           if (!player.isAlive) return null;
           const total = Object.keys(players).length;
-          const xPos = (index - (total - 1) / 2) * 2.5;
+          const xPos = (index - (total - 1) / 2) * 3; // Separación ampliada a 3
 
           return (
-            <group key={sessionId} position={[xPos, 0.5, player.zPos || 0]}>
-              <mesh>
-                <boxGeometry args={[1.2, 1.2, 1.2]} />
-                <meshStandardMaterial color="#007bff" />
-              </mesh>
-              <Text position={[0, 1.5, 0]} rotation={[0, Math.PI, 0]} fontSize={0.6} color="white" outlineWidth={0.06} outlineColor="black" fontWeight="bold">
+            <group key={sessionId} position={[xPos, 0, player.zPos || 0]}>
+              <PlayerCharacter />
+              <Text 
+                position={[0, 2.8, 0]} 
+                rotation={[0, Math.PI, 0]} 
+                fontSize={0.5} 
+                color="white" 
+                outlineWidth={0.05} 
+                outlineColor="black" 
+                fontWeight="bold"
+              >
                 {player.name || "JUGADOR"}
               </Text>
             </group>

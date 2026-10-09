@@ -116,16 +116,22 @@ export class SquidRoom extends Room {
 
   private runLightCycle() {
     const state = this.state as GameState;
-    if (state.status !== "PLAYING") return; // Si se reinicia, el ciclo muere
+    if (state.status !== "PLAYING") return;
 
     if (state.light === "RED") {
+      // De rojo pasamos a verde
       state.light = "GREEN";
-      // Luz Verde: Duración aleatoria entre 2 y 5 segundos
-      const greenTime = Math.random() * 3000 + 2000;
+      const greenTime = Math.random() * 3000 + 3000; // Entre 3 y 6 segundos
       this.lightTimeout = setTimeout(() => this.runLightCycle(), greenTime);
-    } else {
+      
+    } else if (state.light === "GREEN") {
+      // ALERTA: La muñeca deja de cantar y gira la cabeza (Aún no mueren)
+      state.light = "WARNING";
+      this.lightTimeout = setTimeout(() => this.runLightCycle(), 500); // Medio segundo de terror
+      
+    } else if (state.light === "WARNING") {
+      // BALAS REALES: Quien se mueva ahora, muere.
       state.light = "RED";
-      // Luz Roja: Duración aleatoria asegurando un mínimo de 3 segundos (entre 3s y 6s)
       const redTime = Math.random() * 3000 + 3000; 
       this.lightTimeout = setTimeout(() => this.runLightCycle(), redTime);
     }

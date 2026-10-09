@@ -19,40 +19,71 @@ export class GameState extends Schema {
 export class SquidRoom extends Room {
   private distancePerStep = 0.2; 
   private lightTimeout?: NodeJS.Timeout;
+  private readonly FINISH_LINE_Z = 100;
+
+  private checkGameOver() {
+    const state = this.state as GameState;
+    if (state.status !== "PLAYING") return;
+
+    let anyAlive = false;
+    state.players.forEach(p => { if (p.isAlive) anyAlive = true; });
+
+    // Si todos murieron, cerramos el juego
+    if (!anyAlive) {
+      state.status = "GAME_OVER";
+      if (this.lightTimeout) clearTimeout(this.lightTimeout);
+      this.unlock(); // Abrimos la sala para la siguiente ronda
+    }
+  }
 
   onCreate(options: any) {
     this.setState(new GameState());
 
     this.onMessage("STEP", (client, message) => {
       const state = this.state as GameState;
+      if (state.status !== "PLAYING") return;
+      
       const player = state.players.get(client.sessionId);
-      if (!player || !player.isAlive || state.status !== "PLAYING") return;
+      if (!player || !player.isAlive) return;
 
       if (state.light === "RED") {
         player.isAlive = false;
-      } else {
-        player.zPos += this.distancePerStep;
+        this.checkGameOver(); // Validamos si fue el último en morir
+        return;
+      }
+
+      player.zPos += this.distancePerStep;
+
+      // VALIDACIÓN DE VICTORIA
+      if (player.zPos >= this.FINISH_LINE_Z) {
+        state.status = "GAME_OVER";
+        if (this.lightTimeout) clearTimeout(this.lightTimeout);
+        this.unlock();
+        console.log(`¡Jugador ${player.name} ha ganado!`);
       }
     });
 
     this.onMessage("PLAYER_DIED", (client, message) => {
       const state = this.state as GameState;
       const player = state.players.get(client.sessionId);
-      if (player && player.isAlive) {
+      if (player) {
         player.isAlive = false;
+        this.checkGameOver(); // Validamos si fue el último
       }
     });
 
     this.onMessage("HOST_START_GAME", (client, message) => {
       const state = this.state as GameState;
-      state.status = "PLAYING";
+      if (state.status !== "LOBBY") return; // Evitar múltiples clics
       
-      // 1. BLOQUEAR LA SALA: Nadie más puede unirse si la partida empezó
+      state.status = "STARTING"; // Estado puente de 3 segundos
       this.lock(); 
       
-      // 2. Iniciar el ciclo automático de luces (empieza en verde para moverse)
-      state.light = "GREEN";
-      this.lightTimeout = setTimeout(() => this.runLightCycle(), 6000);
+      setTimeout(() => {
+        state.status = "PLAYING";
+        state.light = "GREEN";
+        this.lightTimeout = setTimeout(() => this.runLightCycle(), 6000); 
+      }, 3000); // 3000 ms = 3 segundos
     });
 
     this.onMessage("RESTART_GAME", (client, message) => {

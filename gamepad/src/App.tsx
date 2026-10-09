@@ -225,7 +225,8 @@ function App() {
       <div className="flex flex-col items-center justify-center h-screen bg-neutral-900 p-6">
         <h1 className="text-4xl font-bold text-green-500 mb-8 tracking-widest text-center">LUZ ROJA<br/><span className="text-red-500">LUZ VERDE</span></h1>
         <form onSubmit={joinGame} className="w-full max-w-sm bg-neutral-800 p-6 rounded-xl shadow-lg border border-neutral-700">
-          <input type="text" maxLength={12} value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full px-4 py-3 bg-neutral-900 border border-neutral-600 rounded-lg text-white font-bold text-center focus:outline-none focus:border-green-500 mb-6 uppercase" placeholder="EJ: JUGADOR 456" />
+          <h1 className="text-2xl font-bold white mb-4 text-center uppercase">Coloca tu numero</h1>
+          <input type="number" maxLength={3} value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full px-4 py-3 bg-neutral-900 border border-neutral-600 rounded-lg text-white font-bold text-center focus:outline-none focus:border-green-500 mb-6 uppercase" placeholder="EJ: 456" />
           <button type="submit" disabled={!playerName.trim()} className="w-full py-4 bg-green-600 text-white font-bold rounded-lg transition-colors">ENTRAR</button>
         </form>
       </div>
@@ -261,8 +262,16 @@ function App() {
         <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black/40 z-20 pointer-events-none">
           <span className="font-bold text-white/80 ml-4">{playerName.toUpperCase()}</span>
           <span className="text-sm font-bold text-white/80 mr-4 tracking-widest">
-            {gameStatus === 'LOBBY' ? 'ESPERANDO...' : (lightColor === 'GREEN' ? 'CORRE' : '¡NO TE MUEVAS!')}
+            {gameStatus === 'LOBBY' && 'ESPERANDO...'}
+            {gameStatus === 'STARTING' && 'PREPÁRATE'}
+            {gameStatus === 'PLAYING' && (lightColor === 'GREEN' ? 'CORRE' : '¡NO TE MUEVAS!')}
           </span>
+          {gameStatus === 'STARTING' && (
+          <div className="fixed top-0 left-0 w-screen h-screen z-9999 bg-black/90 flex flex-col items-center justify-center pointer-events-none">
+            <h1 className="text-6xl md:text-8xl font-black text-yellow-500 animate-pulse tracking-widest drop-shadow-lg">PREPÁRATE</h1>
+            <p className="text-white mt-4 font-bold text-xl md:text-2xl">El juego está por comenzar</p>
+          </div>
+          )}
         </div>
 
         <div className="flex-1 flex w-full relative">

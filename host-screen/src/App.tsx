@@ -82,7 +82,7 @@ function SceneryDecals() {
     <group>
       {/* Nubes simples pintadas en las paredes */}
       <mesh position={[-29, 14, 40]}><sphereGeometry args={[3, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
-      <mesh position={[-29, 15, 83]}><sphereGeometry args={[2.5, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
+      <mesh position={[-29, 11, 83]}><sphereGeometry args={[2.5, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
       <mesh position={[29, 13, 80]}><sphereGeometry args={[4, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
     </group>
   );
@@ -193,8 +193,8 @@ function App() {
   const isPanelVisible = gameStatus === "LOBBY" || gameStatus === "GAME_OVER";
   
   // Calcular si hubo ganadores para alterar el título del panel
-  const aliveCount = Object.values(players).filter((p: any) => p.isAlive).length;
-  const hasWinner = aliveCount > 0;
+  const winner: any = gameStatus === "GAME_OVER" ? Object.values(players).find((p: any) => p.isAlive) : null;
+  const hasWinner = !!winner;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -233,6 +233,16 @@ function App() {
           ¡CORRE!
         </div>
       )}
+      {gameStatus === "GAME_OVER" && winner && (
+        <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, color: '#FFD700', textAlign: 'center', animation: 'winnerPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+          <h1 style={{ fontSize: '90px', margin: 0, textShadow: '0px 0px 30px #E91E63', fontWeight: '900', letterSpacing: '5px' }}>
+            ¡GANADOR!
+          </h1>
+          <h2 style={{ fontSize: '50px', margin: '10px 0 0 0', color: 'white', textShadow: '0px 0px 20px black', backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 40px', borderRadius: '15px' }}>
+            JUGADOR {winner.name.toUpperCase()}
+          </h2>
+        </div>
+      )}
 
       {/* RENDERIZADO 3D */}
       <Canvas camera={{ position: [0, 8, -20], fov: 60 }}>
@@ -264,14 +274,24 @@ function App() {
         <mesh position={[0, 10, 130]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
         <SceneryDecals />
 
-        {/* Guardias de Élite Rojos (Corregidos) */}
-        <group position={[-8, 2, 98]}>
+        {/* Guardias de Élite Rojos */}
+        <group position={[-8, 2, 105]}>
           <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
           <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
+          {/* Símbolo Círculo */}
+          <mesh position={[0, 1, -1.02]}>
+            <torusGeometry args={[0.3, 0.06, 16, 32]} />
+            <meshBasicMaterial color="black" />
+          </mesh>
         </group>
-        <group position={[8, 2, 98]}>
+        <group position={[8, 2, 105]}>
           <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
           <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
+          {/* Símbolo Cuadrado (Toroide de 4 segmentos rotado 45 grados) */}
+          <mesh position={[0, 1, -1.02]} rotation={[0, 0, Math.PI / 4]}>
+            <torusGeometry args={[0.35, 0.06, 4, 4]} />
+            <meshBasicMaterial color="black" />
+          </mesh>
         </group>
 
         {/* Muñeca */}
@@ -307,6 +327,10 @@ function App() {
         @keyframes fadeOut {
           0% { opacity: 1; transform: translateX(-50%) scale(1); }
           100% { opacity: 0; transform: translateX(-50%) scale(1.5); }
+        }
+        @keyframes winnerPop {
+          0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
+          100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
       `}</style>
     </div>

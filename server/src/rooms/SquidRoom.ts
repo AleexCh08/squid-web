@@ -127,7 +127,7 @@ export class SquidRoom extends Room {
     } else if (state.light === "GREEN") {
       // ALERTA: La muñeca deja de cantar y gira la cabeza (Aún no mueren)
       state.light = "WARNING";
-      this.lightTimeout = setTimeout(() => this.runLightCycle(), 500); // Medio segundo de terror
+      this.lightTimeout = setTimeout(() => this.runLightCycle(), 300); // Medio segundo de terror
       
     } else if (state.light === "WARNING") {
       // BALAS REALES: Quien se mueva ahora, muere.

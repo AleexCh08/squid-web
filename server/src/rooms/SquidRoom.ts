@@ -159,6 +159,22 @@ export class SquidRoom extends Room {
 
   onLeave(client: Client, code?: number) {
     const state = this.state as GameState;
-    state.players.delete(client.sessionId);
+    const player = state.players.get(client.sessionId);
+
+    if (player) {
+      if (player.name === "HOST_ADMIN") {
+        // Si la pantalla de la PC se cierra, destruimos la sala y expulsamos a todos
+        console.log("[SISTEMA] Host desconectado. Destruyendo la sala...");
+        this.disconnect(); 
+        return;
+      }
+
+      // Si un jugador se va, lo eliminamos y forzamos la validación
+      console.log(`[LEAVE] ${player.name} abandonó la partida.`);
+      state.players.delete(client.sessionId);
+      
+      // Verificamos si, al irse, era el último jugador vivo
+      this.checkGameOver(); 
+    }
   }
 }

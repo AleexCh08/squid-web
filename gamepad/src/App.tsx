@@ -158,6 +158,17 @@ function App() {
           }
         }
       });
+      newRoom.onLeave(() => {
+        setRoom(null);
+        setGameStatus("LOBBY");
+        setIsAlive(true);
+        setExpectedLeg('L');
+        setIsStumbled(false);
+        setIsHoldingBreath(false);
+        setTensionPoint(0);
+        setShowWarning(false);
+        alert("Desconectado de la partida. El Host cerró la sala o perdiste la conexión.");
+      });
     } catch (error) {
       console.error("Error al conectar:", error);
       alert("No se pudo conectar al servidor. Verifica estar en la misma red Wi-Fi y que el host esté encendido.");

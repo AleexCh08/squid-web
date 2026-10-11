@@ -6,6 +6,7 @@ const client = new Client(`ws://192.168.1.6:2567`);
 function App() {
   const [room, setRoom] = useState<Room | null>(null);
   const [playerName, setPlayerName] = useState('');
+  const [playerGender, setPlayerGender] = useState<'M'|'F'>('M');
   const [isAlive, setIsAlive] = useState(true);
   
   const [gameStatus, setGameStatus] = useState('LOBBY'); 
@@ -113,7 +114,7 @@ function App() {
       const response = await fetch(`http://192.168.1.6:2567/matchmake/joinOrCreate/squid_room`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: playerName })
+        body: JSON.stringify({ name: playerName, gender: playerGender })
       });
       
       if (response.status === 423 || response.status === 409) {
@@ -227,6 +228,10 @@ function App() {
         <form onSubmit={joinGame} className="w-full max-w-sm bg-neutral-800 p-6 rounded-xl shadow-lg border border-neutral-700">
           <h1 className="text-2xl font-bold white mb-4 text-center uppercase">Coloca tu numero</h1>
           <input type="number" maxLength={3} value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full px-4 py-3 bg-neutral-900 border border-neutral-600 rounded-lg text-white font-bold text-center focus:outline-none focus:border-green-500 mb-6 uppercase" placeholder="EJ: 456" />
+          <div className="flex gap-4 mb-6">
+            <button type="button" onClick={() => setPlayerGender('M')} className={`flex-1 py-2 font-bold rounded-lg transition-colors ${playerGender === 'M' ? 'bg-blue-600 text-white' : 'bg-neutral-700 text-gray-400'}`}>MASCULINO</button>
+            <button type="button" onClick={() => setPlayerGender('F')} className={`flex-1 py-2 font-bold rounded-lg transition-colors ${playerGender === 'F' ? 'bg-pink-600 text-white' : 'bg-neutral-700 text-gray-400'}`}>FEMENINO</button>
+          </div>
           <button type="submit" disabled={!playerName.trim()} className="w-full py-4 bg-green-600 text-white font-bold rounded-lg transition-colors">ENTRAR</button>
         </form>
       </div>

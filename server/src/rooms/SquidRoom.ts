@@ -4,6 +4,7 @@ import { Schema, MapSchema, type } from "@colyseus/schema";
 export class Player extends Schema {
   @type("string") id: string = "";
   @type("string") name: string = "";
+  @type("string") gender: string = "M";
   @type("boolean") isAlive: boolean = true;
   @type("boolean") isMoving: boolean = false;
   @type("number") zPos: number = 0;
@@ -149,7 +150,8 @@ export class SquidRoom extends Room {
     const state = this.state as GameState;
     const newPlayer = new Player();
     newPlayer.id = client.sessionId;
-    newPlayer.name = options?.name || "Jugador " + Math.floor(Math.random() * 1000); 
+    newPlayer.name = options?.name || "Jugador " + Math.floor(Math.random() * 1000);
+    newPlayer.gender = options?.gender || "M"; 
     
     state.players.set(client.sessionId, newPlayer);
     console.log(`[JOIN] ${newPlayer.name} ha entrado.`);

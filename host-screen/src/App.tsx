@@ -79,18 +79,29 @@ function PlayerCharacter() {
   );
 } 
 */
-useGLTF.preload('/player.glb');
-function GLTFPlayer() {
-  // Extraemos la escena estática del archivo
-  const { scene } = useGLTF('/player.glb');
-  
+useGLTF.preload('/playerM.glb');
+useGLTF.preload('/playerF.glb');
+
+// COMPONENTE MASCULINO
+function PlayerMale() {
+  const { scene } = useGLTF('/playerM.glb');
   return (
-    // scale=[1,1,1] es la escala original. Si el modelo se ve gigante o microscópico, ajusta estos números (ej: [0.5, 0.5, 0.5])
     <group position={[0, 0, 0]} scale={[2.3, 2.3, 2.3]}>
       <Clone object={scene} castShadow />
     </group>
   );
 }
+
+// COMPONENTE FEMENINO
+function PlayerFemale() {
+  const { scene } = useGLTF('/playerF.glb');
+  return (
+    <group position={[0, 0, 0]} scale={[2.3, 2.3, 2.3]}>
+      <Clone object={scene} castShadow />
+    </group>
+  );
+}
+
 
 function SceneryDecals() {
   return (
@@ -166,7 +177,7 @@ function App() {
           const activePlayers: any = {};
           state.players.forEach((player: any, sessionId: string) => {
             if (player.name !== "HOST_ADMIN") {
-              activePlayers[sessionId] = { isAlive: player.isAlive, zPos: player.zPos, name: player.name };
+              activePlayers[sessionId] = { isAlive: player.isAlive, zPos: player.zPos, name: player.name, gender: player.gender };
             }
           });
           setPlayers(activePlayers);
@@ -295,7 +306,6 @@ function App() {
           <group position={[-8, 2, 105]}>
             <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
             <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
-            {/* Símbolo Círculo */}
             <mesh position={[0, 1, -1.02]}>
               <torusGeometry args={[0.3, 0.06, 16, 32]} />
               <meshBasicMaterial color="black" />
@@ -304,7 +314,6 @@ function App() {
           <group position={[8, 2, 105]}>
             <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
             <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
-            {/* Símbolo Cuadrado (Toroide de 4 segmentos rotado 45 grados) */}
             <mesh position={[0, 1, -1.02]} rotation={[0, 0, Math.PI / 4]}>
               <torusGeometry args={[0.35, 0.06, 4, 4]} />
               <meshBasicMaterial color="black" />
@@ -323,7 +332,7 @@ function App() {
             return (
               <group key={sessionId} position={[xPos, 0, player.zPos || 0]}>
                 {/*<PlayerCharacter />*/}
-                <GLTFPlayer />
+                {player.gender === 'F' ? <PlayerFemale /> : <PlayerMale />}
                 <Text 
                   position={[0, 2.8, 0]} 
                   rotation={[0, Math.PI, 0]} 

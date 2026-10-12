@@ -13,28 +13,6 @@ function App() {
   const [room, setRoom] = useState<Room | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [playerGender, setPlayerGender] = useState<'M'|'F'>('M');
-
-  const handleNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, ''); 
-    if (rawValue.length > 3) return; 
-    
-    if (rawValue === '') {
-      setPlayerName('');
-      return;
-    }
-    const num = parseInt(rawValue, 10);
-    if (num > 456) return;
-    setPlayerName(rawValue);
-  };
-
-  const formatNumberOnBlur = () => {
-    if (playerName) {
-      const num = parseInt(playerName, 10);
-      if (num === 0) setPlayerName('001'); 
-      else setPlayerName(num.toString().padStart(3, '0'));
-    }
-  };
-
   const [isAlive, setIsAlive] = useState(true);
   
   const [gameStatus, setGameStatus] = useState('LOBBY'); 
@@ -52,6 +30,27 @@ function App() {
   
   const outCenterTimer = useRef(0); 
   const isWarningRef = useRef(false); 
+
+  // Blindaje de Input (001 - 456)
+  const handleNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, ''); 
+    if (rawValue.length > 3) return; 
+    if (rawValue === '') {
+      setPlayerName('');
+      return;
+    }
+    const num = parseInt(rawValue, 10);
+    if (num > 456) return;
+    setPlayerName(rawValue);
+  };
+
+  const formatNumberOnBlur = () => {
+    if (playerName) {
+      const num = parseInt(playerName, 10);
+      if (num === 0) setPlayerName('001'); 
+      else setPlayerName(num.toString().padStart(3, '0'));
+    }
+  };
 
   useEffect(() => {
     let reactionTimeout: number;
@@ -151,14 +150,7 @@ function App() {
       
       let data = await response.json();
       if (!data.room) {
-        data = {
-          sessionId: data.sessionId,
-          room: {
-            name: data.name,
-            roomId: data.roomId,
-            processId: data.processId
-          }
-        };
+        data = { sessionId: data.sessionId, room: { name: data.name, roomId: data.roomId, processId: data.processId } };
       }
 
       const newRoom = await client.consumeSeatReservation(data);
@@ -197,9 +189,7 @@ function App() {
   };
 
   const leaveGame = () => {
-    if (room) {
-      room.leave(); 
-    }
+    if (room) room.leave(); 
     setRoom(null);
     setGameStatus("LOBBY");
     setIsAlive(true);
@@ -252,40 +242,45 @@ function App() {
     }
   };
 
+  // ================= PANTALLA DE INGRESO =================
   if (!room) {
     const isValidPlayer = playerName.trim().length > 0;
-
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] p-6 text-white font-sans relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-white font-sans relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none flex flex-col justify-between">
           <div className="w-full h-1 bg-[#E91E63]"></div>
           <div className="w-full h-1 bg-[#E91E63]"></div>
         </div>
 
-        <h1 className="text-4xl font-black text-[#E91E63] mb-2 tracking-[0.3em] text-center drop-shadow-[0_0_15px_rgba(233,30,99,0.5)]">
+        <h1 className="text-4xl md:text-5xl font-black text-[#E91E63] mb-2 tracking-[0.3em] text-center drop-shadow-[0_0_15px_rgba(233,30,99,0.5)]">
           SQUID <br/> <span className="text-white">GAME</span>
         </h1>
-        <p className="text-[#888] tracking-widest text-sm mb-10">REGISTRO DE JUGADOR</p>
+        
+        <h2 className="text-lg font-bold text-white tracking-[0.2em] mb-4 text-center">
+          LUZ <span className="text-[#E91E63]">ROJA</span> <span className="text-[#333] mx-1">|</span> LUZ <span className="text-[#14B8A6]">VERDE</span>
+        </h2>
+        
+        <p className="text-[#666] tracking-widest text-xs mb-8">REGISTRO DE JUGADOR</p>
 
-        <form onSubmit={joinGame} className="w-full max-w-sm bg-[#111] p-8 border border-[#333] shadow-[0_0_40px_rgba(0,0,0,0.8)] relative z-10">
+        <form onSubmit={joinGame} className="w-full max-w-sm bg-[#0a0a0a] p-8 border border-[#222] shadow-[0_0_40px_rgba(0,0,0,0.8)] relative z-10">
           
-          <label className="block text-[#E91E63] text-xs font-bold mb-2 tracking-widest text-center uppercase">
+          <label className="block text-[#E91E63] text-[10px] font-bold mb-2 tracking-widest text-center uppercase">
             Número Asignado
           </label>
           
-          <div className="relative mb-8">
-            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-3xl text-[#444] font-black">#</span>
+          <div className="relative mb-6">
+            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-2xl text-[#333] font-black">#</span>
             <input 
               type="number" 
               value={playerName} 
               onChange={handleNumberInput}
               onBlur={formatNumberOnBlur}
-              className="w-full pl-12 pr-4 py-4 bg-black border-2 border-[#333] text-[#E91E63] font-black text-4xl text-center focus:outline-none focus:border-[#E91E63] transition-colors tracking-widest" 
+              className="w-full pl-10 pr-4 py-3 bg-black border-2 border-[#222] text-[#E91E63] font-black text-3xl text-center focus:outline-none focus:border-[#E91E63] transition-colors tracking-widest" 
               placeholder="000" 
             />
           </div>
           
-          <label className="block text-[#E91E63] text-xs font-bold mb-4 tracking-widest text-center uppercase">
+          <label className="block text-[#E91E63] text-[10px] font-bold mb-4 tracking-widest text-center uppercase">
             Selección de Avatar
           </label>
           
@@ -293,151 +288,206 @@ function App() {
             <button 
               type="button" 
               onClick={() => setPlayerGender('M')} 
-              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'M' ? 'border-white text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'border-[#333] text-[#555] bg-black hover:border-[#666]'}`}
+              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'M' ? 'border-white bg-[#111] shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'border-[#222] text-[#555] bg-black hover:border-[#444]'}`}
             >
-              <div className="w-6 h-6 border-2 border-current"></div>
+              <div className="w-5 h-5 border-2 border-current"></div>
             </button>
             <button 
               type="button" 
               onClick={() => setPlayerGender('F')} 
-              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'F' ? 'border-white text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'border-[#333] text-[#555] bg-black hover:border-[#666]'}`}
+              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'F' ? 'border-white bg-[#111] shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'border-[#222] text-[#555] bg-black hover:border-[#444]'}`}
             >
-              <div className="w-6 h-6 border-2 border-current rounded-full"></div>
+              <div className="w-5 h-5 border-2 border-current rounded-full"></div>
             </button>
           </div>
 
           <button 
             type="submit" 
             disabled={!isValidPlayer} 
-            className={`w-full py-5 font-black tracking-[0.2em] transition-all uppercase
+            className={`w-full py-4 text-sm font-black tracking-[0.2em] transition-all uppercase
               ${isValidPlayer 
                 ? 'bg-[#E91E63] text-white hover:bg-[#d81b60] shadow-[0_0_20px_rgba(233,30,99,0.4)] cursor-pointer' 
-                : 'bg-[#222] text-[#555] cursor-not-allowed border border-[#333]'
+                : 'bg-[#111] text-[#333] cursor-not-allowed border border-[#222]'
               }`}
           >
-            Aceptar Términos
+            Entrar
           </button>
         </form>
       </div>
     );
   }
 
+  // ================= PANTALLA DE ELIMINADO =================
   if (gameStatus === "ELIMINATED" || !isAlive) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-red-950 p-6 text-center">
-        <h1 className="text-5xl font-black text-red-500 mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
-          HAS SIDO ELIMINADO
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-center relative overflow-hidden">
+        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-[#E91E63]/20 to-transparent opacity-50"></div>
+        
+        <div className="w-24 h-24 border-[6px] border-[#E91E63] rounded-full mb-8 relative flex items-center justify-center shadow-[0_0_30px_rgba(233,30,99,0.5)] z-10">
+          <div className="w-20 h-1 border-b-[6px] border-[#E91E63] absolute transform -rotate-45"></div>
+        </div>
+        
+        <h1 className="text-5xl font-black text-[#E91E63] mb-8 tracking-[0.2em] drop-shadow-[0_0_15px_rgba(233,30,99,0.8)] relative z-10">
+          ELIMINADO
         </h1>
-        <button 
-          onClick={leaveGame} 
-          className="px-8 py-4 bg-white text-red-950 font-bold rounded-lg text-xl uppercase tracking-wider"
-        >
+        
+        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-2 border-[#E91E63] text-[#E91E63] font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#E91E63] hover:text-white transition-all relative z-10">
           Volver al Inicio
         </button>
       </div>
     );
   }
 
+  // ================= PANTALLA DE VICTORIA =================
   if (isAlive && gameStatus === "GAME_OVER") {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-yellow-600 p-6 text-center">
-        <h1 className="text-6xl font-black text-white mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-bounce">
-          ¡GANASTE!
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-center relative overflow-hidden">
+        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-[#14B8A6]/20 to-transparent opacity-50"></div>
+        
+        <div className="w-24 h-24 mb-8 relative flex items-center justify-center shadow-[0_0_30px_rgba(20,184,166,0.3)] z-10 border-[6px] border-[#14B8A6] rounded-sm transform rotate-45">
+          <div className="w-full h-full border-4 border-black bg-transparent"></div>
+        </div>
+
+        <h1 className="text-6xl font-black text-white mb-2 drop-shadow-[0_0_20px_rgba(20,184,166,0.8)] relative z-10 tracking-widest">
+          GANASTE
         </h1>
-        <p className="text-yellow-200 text-xl font-bold mb-8 uppercase tracking-widest">
-          Sobreviviste al juego
+        <p className="text-[#14B8A6] text-sm font-bold mb-10 tracking-[0.3em] relative z-10">
+          NIVEL COMPLETADO
         </p>
-        <button onClick={leaveGame} className="px-8 py-4 bg-white text-yellow-900 font-bold rounded-lg text-xl uppercase tracking-wider shadow-lg">
+
+        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-2 border-[#14B8A6] text-[#14B8A6] font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#14B8A6] hover:text-black transition-all relative z-10">
           Volver al Inicio
         </button>
       </div>
     );
   }
 
+  // ================= GAMEPAD UI =================
   return (
     <>
-      <div id="portrait-warning" className="fixed inset-0 bg-black z-50 flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 border-4 border-white rounded-xl mb-6 animate-[spin_2s_ease-in-out_infinite]"></div>
-        <h2 className="text-2xl font-bold text-white mb-2">Gira tu teléfono</h2>
-        <p className="text-gray-400">Este juego solo funciona en modo horizontal.</p>
+      <div id="portrait-warning" className="fixed inset-0 bg-[#050505] z-50 flex-col items-center justify-center p-6 text-center">
+        <div className="w-24 h-24 border-[6px] border-[#E91E63] rounded-sm mb-6 animate-[spin_3s_ease-in-out_infinite] shadow-[0_0_20px_rgba(233,30,99,0.5)]"></div>
+        <h2 className="text-2xl font-black text-white mb-2 tracking-widest">GIRA EL DISPOSITIVO</h2>
+        <p className="text-[#666] tracking-widest text-xs">REQUISITO OBLIGATORIO PARA JUGAR</p>
       </div>
 
-      <div id="game-ui" className={`flex flex-col h-screen transition-colors duration-500 ${lightColor === 'GREEN' ? 'bg-green-900' : 'bg-red-950'}`}>
+      <div id="game-ui" className="flex flex-col h-screen bg-[#050505] relative overflow-hidden font-sans select-none">
         
-        <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black/40 z-20 pointer-events-none">
-          <span className="font-bold text-white/80 ml-4">{playerName.toUpperCase()}</span>
-          <span className="text-sm font-bold text-white/80 mr-4 tracking-widest">
+        {/* Viñeta indicadora de luz */}
+        <div className={`absolute inset-0 pointer-events-none transition-all duration-300 z-0 ${
+          lightColor === 'GREEN' ? 'shadow-[inset_0_0_80px_rgba(20,184,166,0.15)]' : 
+          lightColor === 'RED' ? 'shadow-[inset_0_0_120px_rgba(233,30,99,0.2)]' : ''
+        }`}></div>
+
+        {/* Barra superior */}
+        <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center border-b border-[#222] bg-[#0a0a0a]/90 z-20 pointer-events-none shadow-[0_5px_20px_rgba(0,0,0,0.8)]">
+          <span className="font-black text-[#E91E63] ml-4 tracking-[0.2em] text-lg">#{playerName}</span>
+          
+          <span className={`text-sm font-black mr-4 tracking-[0.2em] uppercase transition-colors ${
+            gameStatus === 'PLAYING' 
+              ? (lightColor === 'GREEN' ? 'text-[#14B8A6]' : 'text-[#E91E63] animate-pulse') 
+              : 'text-[#666]'
+          }`}>
             {gameStatus === 'LOBBY' && 'ESPERANDO...'}
-            {gameStatus === 'STARTING' && 'PREPÁRATE'}
-            {gameStatus === 'PLAYING' && (lightColor === 'GREEN' ? 'CORRE' : '¡NO TE MUEVAS!')}
+            {gameStatus === 'STARTING' && 'PREPARANDO'}
+            {gameStatus === 'PLAYING' && (lightColor === 'GREEN' ? 'AVANZA' : 'DETENIDO')}
           </span>
+          
           {gameStatus === 'STARTING' && (
-          <div className="fixed top-0 left-0 w-screen h-screen z-9999 bg-black/90 flex flex-col items-center justify-center pointer-events-none">
-            <h1 className="text-6xl md:text-8xl font-black text-yellow-500 animate-pulse tracking-widest drop-shadow-lg">PREPÁRATE</h1>
-            <p className="text-white mt-4 font-bold text-xl md:text-2xl">El juego está por comenzar</p>
+          <div className="fixed top-0 left-0 w-screen h-screen z-9999 bg-[#050505]/95 flex flex-col items-center justify-center pointer-events-none">
+            <div className="w-16 h-16 border-4 border-[#14B8A6] rounded-full animate-ping mb-8"></div>
+            <h1 className="text-5xl md:text-7xl font-black text-white tracking-[0.3em] drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+              ATENCIÓN
+            </h1>
+            <p className="text-[#14B8A6] mt-4 font-bold text-sm tracking-widest">EL JUEGO VA A COMENZAR</p>
           </div>
           )}
         </div>
 
-        <div className="flex-1 flex w-full relative">
+        <div className="flex-1 flex w-full relative z-10">
+          {/* BOTÓN IZQUIERDO */}
           <div 
             onPointerDown={() => handleStep('L')}
-            className={`flex-1 border-r border-black/30 flex items-center justify-center transition-all cursor-pointer touch-none select-none
-              ${expectedLeg === 'L' && !isStumbled && gameStatus === 'PLAYING' ? 'bg-green-600 shadow-[inset_0_0_50px_rgba(34,197,94,0.5)]' : 'bg-white/5'}
-              ${isStumbled ? 'bg-red-800/50 grayscale' : ''}
+            className={`flex-1 border-r border-[#111] flex flex-col items-center justify-center transition-all cursor-pointer touch-none relative
+              ${isStumbled ? 'bg-[#110000] grayscale opacity-50' : ''}
+              ${lightColor === 'GREEN' && expectedLeg === 'L' && !isStumbled && gameStatus === 'PLAYING' ? 'bg-[#14B8A6]/10 shadow-[inset_0_0_50px_rgba(20,184,166,0.1)]' : 'bg-transparent'}
             `}
           >
-            <span className={`text-7xl font-black select-none ${expectedLeg === 'L' ? 'text-white/80 scale-110' : 'text-white/10'}`}>L</span>
+            {lightColor === 'RED' && expectedLeg === 'L' && gameStatus === 'PLAYING' && (
+              <span className="absolute top-1/4 text-[#14B8A6]/40 text-xs font-bold tracking-[0.2em] animate-pulse border border-[#14B8A6]/20 px-3 py-1 bg-black/50">PREPARAR</span>
+            )}
+            <span className={`text-8xl font-black transition-all duration-200 ${
+              expectedLeg === 'L' && gameStatus === 'PLAYING'
+                ? (lightColor === 'GREEN' ? 'text-[#14B8A6] scale-110 drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]' : 'text-[#333]') 
+                : 'text-[#111]'
+            }`}>L</span>
           </div>
 
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 w-48 h-48">
+          {/* SENSOR CENTRAL DE EQUILIBRIO */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 w-48 h-48">
             <div 
               onPointerDown={handleHoldStart}
               onPointerMove={handleHoldMove}
               onPointerUp={handleHoldEnd}
               onPointerLeave={handleHoldEnd}
-              className={`w-full h-full rounded-full flex flex-col items-center justify-center border-4 transition-all touch-none select-none relative
-                ${lightColor === 'RED' && gameStatus === 'PLAYING' ? 'border-red-500 bg-red-900 shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'border-neutral-600 bg-neutral-800/80 scale-75 opacity-50 pointer-events-none'}
+              className={`w-full h-full rounded-full flex flex-col items-center justify-center border-4 transition-all touch-none relative bg-[#050505]
+                ${lightColor === 'RED' && gameStatus === 'PLAYING' 
+                  ? 'border-[#E91E63] shadow-[0_0_30px_rgba(233,30,99,0.3),inset_0_0_15px_rgba(233,30,99,0.2)]' 
+                  : 'border-[#111] scale-75 opacity-30 pointer-events-none'}
               `}
             >
               {lightColor === 'RED' && gameStatus === 'PLAYING' ? (
                 <>
+                  <div className="absolute inset-0 rounded-full border border-[#E91E63]/20 animate-ping pointer-events-none"></div>
+                  
                   {showWarning && (
-                    <span className="absolute -top-10 text-sm font-black text-red-400 animate-bounce text-center w-64 pointer-events-none drop-shadow-md bg-black/50 px-2 py-1 rounded">
-                      ¡MANTENTE EN EL CENTRO!
+                    <span className="absolute -top-10 text-[10px] font-black text-[#E91E63] animate-bounce text-center w-full pointer-events-none drop-shadow-[0_0_5px_rgba(233,30,99,0.8)] bg-black px-2 py-1 border border-[#E91E63]">
+                      ¡RIESGO DE MOVIMIENTO!
                     </span>
                   )}
                   
-                  <span className="text-xs font-bold text-red-300 mb-2 pointer-events-none">MANTÉN Y EQUILIBRA</span>
+                  <span className="text-[9px] font-bold text-[#E91E63]/70 mb-3 pointer-events-none tracking-widest text-center px-4 leading-tight">
+                    MANTÉN PRESIONADO<br/>Y NO TE MUEVAS
+                  </span>
                   
-                  <div className="w-32 h-4 bg-black rounded-full relative overflow-hidden pointer-events-none border border-red-950">
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/4 h-full bg-green-500/50"></div>
+                  {/* Barra mecánica del sensor */}
+                  <div className="w-28 h-4 bg-[#0a0a0a] rounded-sm relative overflow-hidden pointer-events-none border border-[#333]">
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-full bg-[#14B8A6]/20"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-[#14B8A6]/50"></div>
                     <div 
-                      className={`absolute top-0 w-2 h-full transition-transform duration-75 ${showWarning ? 'bg-red-500' : 'bg-white'}`}
+                      className={`absolute top-0 w-1.5 h-full transition-transform duration-75 shadow-[0_0_5px_rgba(255,255,255,0.5)] ${showWarning ? 'bg-[#E91E63]' : 'bg-white'}`}
                       style={{ left: `calc(50% + ${tensionPoint / 2}%)`, transform: 'translateX(-50%)' }}
                     ></div>
                   </div>
                 </>
               ) : (
-                <span className="text-neutral-500 font-bold">ZONA SEGURA</span>
+                <span className="text-[#333] font-black tracking-widest text-xs">SENSOR</span>
               )}
             </div>
           </div>
 
+          {/* BOTÓN DERECHO */}
           <div 
             onPointerDown={() => handleStep('R')}
-            className={`flex-1 border-l border-black/30 flex items-center justify-center transition-all cursor-pointer touch-none select-none
-              ${expectedLeg === 'R' && !isStumbled && gameStatus === 'PLAYING' ? 'bg-green-600 shadow-[inset_0_0_50px_rgba(34,197,94,0.5)]' : 'bg-white/5'}
-              ${isStumbled ? 'bg-red-800/50 grayscale' : ''}
+            className={`flex-1 border-l border-[#111] flex flex-col items-center justify-center transition-all cursor-pointer touch-none relative
+              ${isStumbled ? 'bg-[#110000] grayscale opacity-50' : ''}
+              ${lightColor === 'GREEN' && expectedLeg === 'R' && !isStumbled && gameStatus === 'PLAYING' ? 'bg-[#14B8A6]/10 shadow-[inset_0_0_50px_rgba(20,184,166,0.1)]' : 'bg-transparent'}
             `}
           >
-            <span className={`text-7xl font-black select-none ${expectedLeg === 'R' ? 'text-white/80 scale-110' : 'text-white/10'}`}>R</span>
+            {lightColor === 'RED' && expectedLeg === 'R' && gameStatus === 'PLAYING' && (
+              <span className="absolute top-1/4 text-[#14B8A6]/40 text-xs font-bold tracking-[0.2em] animate-pulse border border-[#14B8A6]/20 px-3 py-1 bg-black/50">PREPARAR</span>
+            )}
+            <span className={`text-8xl font-black transition-all duration-200 ${
+              expectedLeg === 'R' && gameStatus === 'PLAYING'
+                ? (lightColor === 'GREEN' ? 'text-[#14B8A6] scale-110 drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]' : 'text-[#333]') 
+                : 'text-[#111]'
+            }`}>R</span>
           </div>
         </div>
 
         {isStumbled && (
-          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none bg-red-500/20">
-            <span className="text-6xl font-black text-red-500 rotate-[-10deg] drop-shadow-lg">¡TROPEZASTE!</span>
+          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none bg-[#E91E63]/10 backdrop-grayscale">
+            <span className="text-4xl font-black text-[#E91E63] rotate-[-5deg] tracking-[0.2em] drop-shadow-[0_0_15px_rgba(233,30,99,0.8)] border-4 border-[#E91E63] p-4">TROPIEZO</span>
           </div>
         )}
       </div>

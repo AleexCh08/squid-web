@@ -4,11 +4,23 @@ import { Sky, Text, useGLTF, Clone, SoftShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import { Client, Room } from 'colyseus.js';
 import { QRCodeCanvas } from 'qrcode.react';
+import { audio } from './utils/SoundEngine';
 
 // ==================== COMPONENTES 3D ====================
 function Doll({ light }: { light: string }) {
   const headRef = useRef<THREE.Group>(null);
-  const targetRotation = (light === 'RED' || light === 'WARNING') ? Math.PI : 0;
+  const [visualLight, setVisualLight] = useState(light);
+
+  useEffect(() => {
+    if (light === 'RED') {
+      const timer = setTimeout(() => setVisualLight('RED'), 300);
+      return () => clearTimeout(timer);
+    } else {
+      setVisualLight(light);
+    }
+  }, [light]);
+
+  const targetRotation = (visualLight === 'RED' || visualLight === 'WARNING') ? Math.PI : 0;
 
   useFrame(() => {
     if (headRef.current) {
@@ -111,6 +123,85 @@ function App() {
 
   const isConnecting = useRef(false);
 
+  // 1. Sincronizar el botón de Muteo
+  useEffect(() => {
+    audio.setMuted(!soundEnabled);
+  }, [soundEnabled]);
+
+  // 2. Cerebro Acústico: Reacciona a las fases del juego
+  useEffect(() => {
+    if (!soundEnabled) {
+      audio.stopAll(); // Botón de pánico si muteas en pleno juego
+      return;
+    }
+
+    // Purgamos sonidos conflictivos en cada cambio de fase
+    audio.stop('scanning');
+    audio.stop('win'); 
+
+    // Solo suena en PRE_LOBBY. Si el host abre las puertas (LOBBY), se silencia.
+    if (gameStatus === "PRE_LOBBY") {
+      audio.play('bgLobby');
+    } else {
+      audio.stop('bgLobby');
+    }
+
+    if (gameStatus === "PLAYING") {
+      if (lightColor === "GREEN") {
+        audio.play('greenLight', true);
+      } else if (lightColor === "RED") {
+        audio.play('redLight', true);
+        
+        setTimeout(() => {
+          if (gameStatus === "PLAYING" && lightColor === "RED") {
+            audio.play('scanning', true);
+          }
+        }, 1200); 
+      }
+      
+    } else if (gameStatus === "GAME_OVER") {
+      // Solo hay victoria si el sistema cuenta sobrevivientes
+      const hasWinner = Object.values(players).some((p: any) => p.isAlive);
+      if (hasWinner) {
+        audio.play('win', true); // Al estar en loop=false en el Engine, no se repetirá infinitamente
+      }
+    }
+  }, [gameStatus, lightColor, soundEnabled]);
+
+  // 3. SENSOR DE ELIMINACIONES (El francotirador blindado)
+  const previousPlayersStatus = useRef<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (gameStatus !== "PLAYING" || !soundEnabled) {
+      // Si no estamos jugando, solo actualizamos el registro en silencio
+      const currentStatus: Record<string, boolean> = {};
+      Object.entries(players).forEach(([id, p]: [string, any]) => {
+        currentStatus[id] = p.isAlive;
+      });
+      previousPlayersStatus.current = currentStatus;
+      return;
+    }
+
+    let somebodyDied = false;
+    const currentStatus: Record<string, boolean> = {};
+    
+    Object.entries(players).forEach(([id, p]: [string, any]) => {
+      currentStatus[id] = p.isAlive;
+      
+      // Validación estricta: ¿Estaba vivo en el frame anterior y ahora está muerto?
+      if (previousPlayersStatus.current[id] === true && p.isAlive === false) {
+        somebodyDied = true;
+      }
+    });
+
+    if (somebodyDied) {
+      audio.play('gunshot', true);
+    }
+
+    // Guardamos el estado actual para la próxima comprobación
+    previousPlayersStatus.current = currentStatus;
+  }, [players, gameStatus, soundEnabled]);
+
   useEffect(() => {
     if (isConnecting.current) return;
     isConnecting.current = true;
@@ -171,15 +262,27 @@ function App() {
   }, [gameStatus]);
 
   const startGame = () => { 
+    audio.play('click', true);
     if (room) room.send("HOST_START_GAME"); 
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
     }
   };
-  const goToArena = () => { if (room) room.send("GO_TO_ARENA"); };
-  const restartMatch = () => { if (room) room.send("RESTART_MATCH"); };
-  const returnToQr = () => { if (room) room.send("RETURN_TO_QR"); };
+  const goToArena = () => { 
+    audio.play('click', true);
+    if (room) room.send("GO_TO_ARENA"); 
+  };
+  const restartMatch = () => { 
+    audio.play('click', true);
+    if (room) room.send("RESTART_MATCH"); 
+  };
+  const returnToQr = () => { 
+    audio.play('click', true);
+    if (room) room.send("RETURN_TO_QR"); 
+  };
+
   const changeDifficulty = (level: string, distance: number) => {
+    audio.play('click', true);
     if (room) room.send("SET_DIFFICULTY", { level, distance });
   };
 
@@ -208,9 +311,9 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', fontFamily: 'sans-serif' }}>
       {/* BOTÓN DE TUTORIAL FLOTANTE (BRUTALISTA) */}
-      {(gameStatus === "PRE_LOBBY" || gameStatus === "LOBBY") && (
+      {gameStatus === "PRE_LOBBY" && (
         <button 
-          onClick={() => setShowTutorial(true)}
+          onClick={() => { audio.play('click', true); setShowTutorial(true); }}
           style={{ position: 'absolute', top: '30px', right: '30px', zIndex: 200, width: '60px', height: '60px', borderRadius: '50%', background: 'black', border: '4px solid #14B8A6', color: '#14B8A6', fontSize: '30px', fontWeight: '900', boxShadow: '6px 6px 0px #0a221f', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' }}
         >
           ?
@@ -218,9 +321,9 @@ function App() {
       )}
 
       {/* BOTÓN DE AJUSTES FLOTANTE (BRUTALISTA) */}
-      {(gameStatus === "PRE_LOBBY" || gameStatus === "LOBBY") && (
+      {gameStatus === "PRE_LOBBY" && (
         <button 
-          onClick={() => setShowSettings(true)}
+          onClick={() => { audio.play('click', true); setShowSettings(true); }}
           style={{ position: 'absolute', top: '30px', left: '30px', zIndex: 200, width: '60px', height: '60px', borderRadius: '0', background: 'black', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '6px 6px 0px #0a221f', cursor: 'pointer', transition: 'all 0.1s' }}
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
@@ -244,13 +347,13 @@ function App() {
               <h3 style={{ color: '#aaa', fontSize: '14px', fontWeight: '900', margin: '0 0 15px 0', letterSpacing: '4px' }}>MÓDULO DE AUDIO</h3>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button 
-                  onClick={() => setSoundEnabled(true)} 
+                  onClick={() => { audio.play('click', true); setSoundEnabled(true); }} 
                   style={{ flex: 1, padding: '15px', background: soundEnabled ? '#14B8A6' : 'black', color: soundEnabled ? 'black' : '#14B8A6', border: '4px solid #14B8A6', fontWeight: '900', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.1s' }}
                 >
                   ACTIVADO
                 </button>
                 <button 
-                  onClick={() => setSoundEnabled(false)} 
+                  onClick={() => { audio.play('click', true); setSoundEnabled(false); }} 
                   style={{ flex: 1, padding: '15px', background: !soundEnabled ? '#E91E63' : 'black', color: !soundEnabled ? 'black' : '#E91E63', border: '4px solid #E91E63', fontWeight: '900', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.1s' }}
                 >
                   MUTEO TOTAL
@@ -263,12 +366,12 @@ function App() {
               <p style={{ color: '#14B8A6', fontSize: '12px', fontWeight: '900', letterSpacing: '4px', marginBottom: '20px' }}>DESARROLLADO POR ALEEXCH</p>
               
               <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '30px' }}>
-                <a href="https://github.com/AleexCh08" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'black', color: 'white', border: '4px solid #333', padding: '10px 20px', textDecoration: 'none', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.1s' }} onMouseOver={(e) => e.currentTarget.style.borderColor = 'white'} onMouseOut={(e) => e.currentTarget.style.borderColor = '#333'}>
+                <a href="https://github.com/AleexCh" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'black', color: 'white', border: '4px solid #333', padding: '10px 20px', textDecoration: 'none', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.1s' }} onMouseOver={(e) => e.currentTarget.style.borderColor = 'white'} onMouseOut={(e) => e.currentTarget.style.borderColor = '#333'}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                   GITHUB
                 </a>
                 
-                <a href="https://instagram.com/aleexch0" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'black', color: '#E91E63', border: '4px solid #E91E63', padding: '10px 20px', textDecoration: 'none', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.1s' }} onMouseOver={(e) => {e.currentTarget.style.background = '#E91E63'; e.currentTarget.style.color = 'black';}} onMouseOut={(e) => {e.currentTarget.style.background = 'black'; e.currentTarget.style.color = '#E91E63';}}>
+                <a href="https://instagram.com/AleexCh" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'black', color: '#E91E63', border: '4px solid #E91E63', padding: '10px 20px', textDecoration: 'none', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.1s' }} onMouseOver={(e) => {e.currentTarget.style.background = '#E91E63'; e.currentTarget.style.color = 'black';}} onMouseOut={(e) => {e.currentTarget.style.background = 'black'; e.currentTarget.style.color = '#E91E63';}}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                   INSTAGRAM
                 </a>
@@ -276,7 +379,7 @@ function App() {
             </div>
 
             <button 
-              onClick={() => setShowSettings(false)}
+              onClick={() => { audio.play('click', true); setShowSettings(false); }}
               style={{ width: '100%', padding: '15px', background: 'transparent', color: 'white', border: '4px solid white', fontSize: '16px', fontWeight: '900', letterSpacing: '6px', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.1s' }}
             >
               CERRAR PANEL
@@ -298,7 +401,7 @@ function App() {
               {/* Instrucción 1: LUZ VERDE */}
               <div style={{ flex: 1, border: '4px solid #14B8A6', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #0a221f' }}>
                 <h3 style={{ color: '#14B8A6', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>1. LUZ VERDE</h3>
-                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>¡AVANZA! Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
+                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
                 <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'center' }}>
                   <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkL 1s infinite' }}>L</div>
                   <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkR 1s infinite' }}>R</div>
@@ -321,7 +424,7 @@ function App() {
             </div>
 
             <button 
-              onClick={() => setShowTutorial(false)}
+              onClick={() => { audio.play('click', true); setShowTutorial(false); }}
               style={{ width: '100%', padding: '20px', background: '#14B8A6', color: 'black', border: '4px solid #14B8A6', fontSize: '20px', fontWeight: '900', letterSpacing: '6px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '8px 8px 0px #0a221f', transition: 'all 0.1s' }}
             >
               Entendido
@@ -329,6 +432,7 @@ function App() {
           </div>
         </div>
       )}
+
       {/* 2. CORTINA DE LOBBY (CÓDIGO QR) */}
       {gameStatus === "PRE_LOBBY" && (
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', padding: '40px', boxSizing: 'border-box' }}>

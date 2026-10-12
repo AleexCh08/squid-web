@@ -220,7 +220,7 @@ function App() {
 
     const connectHost = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/matchmake/joinOrCreate/squid_room`, {
+        const response = await fetch(`${BACKEND_URL}/matchmake/create/squid_room`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: "HOST_ADMIN" })
@@ -298,8 +298,8 @@ function App() {
   };
 
   const gamepadUrl = isLocal
-      ? `http://${window.location.hostname}:5173` 
-      : "https://gamepad-squid.netlify.app/";
+      ? `http://${window.location.hostname}:5173/?room=${room?.roomId ?? ''}` 
+      : `https://gamepad-squid.netlify.app/?room=${room?.roomId ?? ''}`;
   const playerCount = Object.keys(players).length;
 
   // PANTALLA DE CONEXIÓN
@@ -411,7 +411,7 @@ function App() {
             <div style={{ display: 'flex', gap: '30px', marginBottom: '40px' }}>
               <div style={{ flex: 1, border: '4px solid #14B8A6', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #0a221f' }}>
                 <h3 style={{ color: '#14B8A6', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>1. LUZ VERDE</h3>
-                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
+                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>¡AVANZA! Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
                 <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'center' }}>
                   <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkL 1s infinite' }}>L</div>
                   <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkR 1s infinite' }}>R</div>
@@ -420,7 +420,7 @@ function App() {
 
               <div style={{ flex: 1, border: '4px solid #E91E63', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #220000' }}>
                 <h3 style={{ color: '#E91E63', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>2. LUZ ROJA</h3>
-                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>¡DETENTE! Mantén el dedo presionado sobre el sensor y compensa la fuerza para mantener el indicador en el centro.</p>
+                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>¡DETENTE! Mantén el dedo presionado sobre el sensor y manten el indicador en el centro. Mueve el dedo en la dirección contraria para controlar.</p>
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
                   <div style={{ width: '80px', height: '80px', border: '4px solid #E91E63', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'black' }}>
                     <span style={{color: '#E91E63', fontSize: '8px', fontWeight: '900', marginBottom: '5px'}}>SENSOR</span>

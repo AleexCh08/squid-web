@@ -139,30 +139,37 @@ function App() {
     enterFullScreen();
 
     try {
-      const response = await fetch(`${BACKEND_URL}/matchmake/joinOrCreate/squid_room`, {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomId = urlParams.get('room');
+
+      if (!roomId) {
+        throw new Error("ACCESO DENEGADO: Debes escanear el Código QR de una pantalla Host.");
+      }
+
+      const response = await fetch(`${BACKEND_URL}/matchmake/joinById/${roomId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: playerName, gender: playerGender })
       });
-      
-      if (response.status === 423 || response.status === 409) {
-        throw new Error("La partida ya está en curso, espera a que termine.");
-      }
-      if (!response.ok) throw new Error("El servidor rechazó la conexión");
-      
+
+      if (!response.ok) throw new Error("El servidor rechazó la conexión a la sala privada.");
+
       let data = await response.json();
       if (!data.room) {
-        data = { sessionId: data.sessionId, room: { name: data.name, roomId: data.roomId, processId: data.processId } };
+        data = { 
+          sessionId: data.sessionId, 
+          room: { name: data.name, roomId: data.roomId, processId: data.processId } 
+        };
       }
 
       const newRoom = await client.consumeSeatReservation(data);
       setRoom(newRoom);
-      
+
       newRoom.onStateChange((state) => {
         setGameStatus(state.status);
         setLightColor(state.light);
 
-        const me = state.players.get(data.sessionId);
+        const me = state.players.get(newRoom.sessionId);
         if (me) {
           setIsAlive(me.isAlive);         
           if (!me.isAlive) {
@@ -173,6 +180,7 @@ function App() {
           }
         }
       });
+
       newRoom.onLeave(() => {
         setRoom(null);
         setGameStatus("LOBBY");
@@ -184,22 +192,11 @@ function App() {
         setShowWarning(false);
         alert("Desconectado de la partida. El Host cerró la sala o perdiste la conexión.");
       });
-    } catch (error) {
-      console.error("Error al conectar:", error);
-      alert("No se pudo conectar al servidor. Verifica estar en la misma red Wi-Fi y que el host esté encendido.");
-    }
-  };
 
-  const leaveGame = () => {
-    if (room) room.leave(); 
-    setRoom(null);
-    setGameStatus("LOBBY");
-    setIsAlive(true);
-    setExpectedLeg('L');
-    setIsStumbled(false);
-    setIsHoldingBreath(false);
-    setTensionPoint(0);
-    setShowWarning(false);
+    } catch (error: any) {
+      console.error("Error al conectar:", error);
+      alert(error.message || "Error desconocido al conectar.");
+    }
   };
 
   const handleStep = (leg: 'L' | 'R') => {
@@ -340,9 +337,9 @@ function App() {
           ELIMINADO
         </h1>
         
-        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-4 border-[#E91E63] text-[#E91E63] font-black text-xs tracking-[0.2em] uppercase transition-all relative z-10 shadow-[6px_6px_0px_#E91E63] hover:shadow-[0px_0px_0px_#E91E63] hover:translate-y-1 hover:translate-x-1 hover:bg-[#E91E63] hover:text-black">
-          Volver al Inicio
-        </button>
+        <div className="px-8 py-4 bg-transparent border-4 border-[#333] text-[#666] font-black text-xs tracking-[0.2em] uppercase relative z-10">
+          ESPERANDO AL HOST...
+        </div>
       </div>
     );
   }
@@ -363,9 +360,9 @@ function App() {
           NIVEL COMPLETADO
         </p>
 
-        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-4 border-[#14B8A6] text-[#14B8A6] font-black text-xs tracking-[0.2em] uppercase transition-all relative z-10 shadow-[6px_6px_0px_#14B8A6] hover:shadow-[0px_0px_0px_#14B8A6] hover:translate-y-1 hover:translate-x-1 hover:bg-[#14B8A6] hover:text-black">
-          Volver al Inicio
-        </button>
+        <div className="px-8 py-4 bg-transparent border-4 border-[#333] text-[#666] font-black text-xs tracking-[0.2em] uppercase relative z-10">
+          ESPERANDO AL HOST...
+        </div>
       </div>
     );
   }

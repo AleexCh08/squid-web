@@ -1,24 +1,25 @@
 import { Room, Client } from "colyseus";
-import { Schema, MapSchema, type } from "@colyseus/schema";
+import { Schema, MapSchema, type as colyseusType } from "@colyseus/schema";
 
 export class Player extends Schema {
-  @type("string") id: string = "";
-  @type("string") name: string = "";
-  @type("string") gender: string = "M";
-  @type("boolean") isAlive: boolean = true;
-  @type("boolean") isMoving: boolean = false;
-  @type("number") zPos: number = 0;
+  @colyseusType("string") id: string = "";
+  @colyseusType("string") name: string = "";
+  @colyseusType("string") gender: string = "M";
+  @colyseusType("boolean") isAlive: boolean = true;
+  @colyseusType("boolean") isMoving: boolean = false;
+  @colyseusType("number") zPos: number = 0;
 }
 
 export class GameState extends Schema {
-  @type("string") status: string = "PRE_LOBBY"; 
-  @type("string") light: string = "RED";
-  @type("string") difficulty: string = "NORMAL";
+  @colyseusType("string") status: string = "PRE_LOBBY"; 
+  @colyseusType("string") light: string = "RED";
+  @colyseusType("string") difficulty: string = "NORMAL";
   
-  @type({ map: Player }) players = new MapSchema<Player>();
+  @colyseusType({ map: Player }) players = new MapSchema<Player>();
 }
 
 export class SquidRoom extends Room {
+  state: GameState;
   private distancePerStep = 1.25; 
   private lightTimeout?: NodeJS.Timeout;
   private readonly FINISH_LINE_Z = 100;
@@ -127,20 +128,18 @@ export class SquidRoom extends Room {
     });
 
     this.onMessage("RETURN_TO_QR", (client, message) => {
-      const state = this.state as GameState;
+      const state = this.state;
       if (this.lightTimeout) clearTimeout(this.lightTimeout);
       
       state.status = "PRE_LOBBY";
       state.light = "RED";
       
-      this.clients.forEach(c => {
-        const p = state.players.get(c.sessionId);
-        if (p && p.name !== "HOST_ADMIN") {
-          c.leave();
-        }
+      state.players.forEach(player => {
+        player.isAlive = true;
+        player.zPos = 0;
       });
       
-      this.unlock();
+      this.unlock(); 
     });
 
     this.onMessage("CHANGE_LIGHT", (client, data: { light: string }) => {
@@ -169,35 +168,46 @@ export class SquidRoom extends Room {
     }
   }
 
-  onJoin(client: Client, options: any = {}) {
-    const state = this.state as GameState;
-    const newPlayer = new Player();
-    newPlayer.id = client.sessionId;
-    newPlayer.name = options?.name || "Jugador " + Math.floor(Math.random() * 1000);
-    newPlayer.gender = options?.gender || "M"; 
-    
-    state.players.set(client.sessionId, newPlayer);
-    console.log(`[JOIN] ${newPlayer.name} ha entrado.`);
+  onJoin(client: Client, options: any) {
+    const data = options || {};
+
+    if (data.name === "HOST_ADMIN") {
+      client.userData = { isHost: true };
+      console.log(`[SISTEMA] Host conectado. Sala blindada.`);
+    } else {
+      const player = new Player();
+      player.name = data.name || "000"; 
+      player.gender = data.gender || "M";
+      player.isAlive = true;
+      player.zPos = 0; 
+      
+      this.state.players.set(client.sessionId, player);
+    }
   }
 
   onLeave(client: Client, code?: number) {
-    const state = this.state as GameState;
-    const player = state.players.get(client.sessionId);
+    if (client.userData?.isHost) {
+      console.log(`[SISTEMA] Host desconectado. Destruyendo sala ${this.roomId}`);
+      this.disconnect(); 
+    } else {
+      const state = this.state as GameState;
+      const player = state.players.get(client.sessionId);
 
-    if (player) {
-      if (player.name === "HOST_ADMIN") {
-        console.log("[SISTEMA] Host desconectado. Destruyendo la sala...");
-        this.disconnect(); 
-        return;
-      }
-      
-      console.log(`[LEAVE] ${player.name} abandonó la partida.`);
+      if (player) {
+        if (player.name === "HOST_ADMIN") {
+          console.log("[SISTEMA] Host desconectado. Destruyendo la sala...");
+          this.disconnect(); 
+          return;
+        }
+        
+        console.log(`[LEAVE] ${player.name} abandonó la partida.`);
 
-      if (state.status === "PLAYING" || state.status === "STARTING") {
-        player.isAlive = false;
-        this.checkGameOver(); 
-      } else {
-        state.players.delete(client.sessionId);
+        if (state.status === "PLAYING" || state.status === "STARTING") {
+          player.isAlive = false;
+          this.checkGameOver(); 
+        } else {
+          state.players.delete(client.sessionId);
+        }
       }
     }
   }

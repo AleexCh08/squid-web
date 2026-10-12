@@ -14,6 +14,8 @@ class SoundEngine {
       gunshot: new Audio('/sounds/gunshot.mp3'),
       win: new Audio('/sounds/win.mp3'),
       click: new Audio('/sounds/click.mp3'),
+      countdown: new Audio('/sounds/countdown.mp3'), 
+      join: new Audio('/sounds/join.mp3'),
     };
 
     // Solo el lobby se repite en bucle
@@ -29,6 +31,12 @@ class SoundEngine {
 
     this.sounds.scanning.loop = false;
     this.sounds.scanning.volume = 0.6;
+
+    this.sounds.countdown.loop = false;
+    this.sounds.countdown.volume = 0.8;
+
+    this.sounds.join.loop = false;
+    this.sounds.join.volume = 0.7;
   }
 
   // Activar o desactivar el audio maestro

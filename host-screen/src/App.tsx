@@ -13,7 +13,7 @@ function Doll({ light }: { light: string }) {
 
   useEffect(() => {
     if (light === 'RED') {
-      const timer = setTimeout(() => setVisualLight('RED'), 300);
+      const timer = setTimeout(() => setVisualLight('RED'), 800); // giro y grito sincronizados
       return () => clearTimeout(timer);
     } else {
       setVisualLight(light);
@@ -168,12 +168,24 @@ function App() {
     }
   }, [gameStatus, lightColor, soundEnabled]);
 
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (gameStatus === "PRE_LOBBY" && soundEnabled) {
+        audio.play('bgLobby');
+      }
+      // Una vez que el usuario hace el primer clic, quitamos el evento para no saturar
+      document.removeEventListener('pointerdown', unlockAudio);
+    };
+    
+    document.addEventListener('pointerdown', unlockAudio);
+    return () => document.removeEventListener('pointerdown', unlockAudio);
+  }, [gameStatus, soundEnabled]);
+
   // 3. SENSOR DE ELIMINACIONES (El francotirador blindado)
   const previousPlayersStatus = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (gameStatus !== "PLAYING" || !soundEnabled) {
-      // Si no estamos jugando, solo actualizamos el registro en silencio
+    if (!soundEnabled) {
       const currentStatus: Record<string, boolean> = {};
       Object.entries(players).forEach(([id, p]: [string, any]) => {
         currentStatus[id] = p.isAlive;
@@ -188,7 +200,7 @@ function App() {
     Object.entries(players).forEach(([id, p]: [string, any]) => {
       currentStatus[id] = p.isAlive;
       
-      // Validación estricta: ¿Estaba vivo en el frame anterior y ahora está muerto?
+      // Detecta la eliminación puramente por el cambio booleano, sin importar la fase del juego
       if (previousPlayersStatus.current[id] === true && p.isAlive === false) {
         somebodyDied = true;
       }
@@ -198,9 +210,33 @@ function App() {
       audio.play('gunshot', true);
     }
 
-    // Guardamos el estado actual para la próxima comprobación
     previousPlayersStatus.current = currentStatus;
+  }, [players, soundEnabled]);
+
+  // 4. SENSOR DE CONEXIONES (El timbre del lobby)
+  const prevPlayerCount = useRef<number>(0);
+
+  useEffect(() => {
+    const currentPlayerCount = Object.keys(players).length;
+    
+    // Si estamos en la fase de registro y la cantidad de jugadores SUBE
+    if ((gameStatus === "PRE_LOBBY" || gameStatus === "LOBBY") && soundEnabled) {
+      if (currentPlayerCount > prevPlayerCount.current) {
+        audio.play('join', true);
+      }
+    }
+    
+    prevPlayerCount.current = currentPlayerCount;
   }, [players, gameStatus, soundEnabled]);
+
+
+  // 5. SENSOR DE CUENTA REGRESIVA (El pitido)
+  useEffect(() => {
+    // Cada vez que el contador cambie (3, 2, 1) y no sea nulo, reproducimos el bip
+    if (countdown !== null && soundEnabled) {
+      audio.play('countdown', true);
+    }
+  }, [countdown, soundEnabled]);
 
   useEffect(() => {
     if (isConnecting.current) return;

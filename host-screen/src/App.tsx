@@ -109,7 +109,7 @@ function App() {
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<any>({});
   
-  const [gameStatus, setGameStatus] = useState("LOBBY");
+  const [gameStatus, setGameStatus] = useState("CONNECTING");
   const [lightColor, setLightColor] = useState("RED");
   const [countdown, setCountdown] = useState<number | null>(null);
 
@@ -187,6 +187,16 @@ function App() {
       ? `http://${window.location.hostname}:5173` 
       : window.location.origin;
   const playerCount = Object.keys(players).length;
+
+  if (gameStatus === "CONNECTING") {
+    return (
+      <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h2 style={{ color: '#E91E63', fontFamily: 'sans-serif', fontWeight: 'bold', letterSpacing: '2px', animation: 'pulse 1.5s infinite' }}>
+          CONECTANDO AL SERVIDOR...
+        </h2>
+      </div>
+    );
+  }
 
   const isPanelVisible = gameStatus === "LOBBY" || gameStatus === "GAME_OVER";
   const winner: any = gameStatus === "GAME_OVER" ? Object.values(players).find((p: any) => p.isAlive) : null;

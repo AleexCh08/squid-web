@@ -123,9 +123,11 @@ export class SquidRoom extends Room {
       state.status = "PRE_LOBBY";
       state.light = "RED";
       
-      state.players.forEach(player => {
-        player.isAlive = true;
-        player.zPos = 0;
+      this.clients.forEach(c => {
+        const p = state.players.get(c.sessionId);
+        if (p && p.name !== "HOST_ADMIN") {
+          c.leave();
+        }
       });
       
       this.unlock();
@@ -178,9 +180,15 @@ export class SquidRoom extends Room {
         this.disconnect(); 
         return;
       }
+      
       console.log(`[LEAVE] ${player.name} abandonó la partida.`);
-      state.players.delete(client.sessionId);
-      this.checkGameOver(); 
+
+      if (state.status === "PLAYING" || state.status === "STARTING") {
+        player.isAlive = false;
+        this.checkGameOver(); 
+      } else {
+        state.players.delete(client.sessionId);
+      }
     }
   }
 }

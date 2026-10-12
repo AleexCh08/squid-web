@@ -9,18 +9,7 @@ import { audio } from './utils/SoundEngine';
 // ==================== COMPONENTES 3D ====================
 function Doll({ light }: { light: string }) {
   const headRef = useRef<THREE.Group>(null);
-  const [visualLight, setVisualLight] = useState(light);
-
-  useEffect(() => {
-    if (light === 'RED') {
-      const timer = setTimeout(() => setVisualLight('RED'), 800); // giro y grito sincronizados
-      return () => clearTimeout(timer);
-    } else {
-      setVisualLight(light);
-    }
-  }, [light]);
-
-  const targetRotation = (visualLight === 'RED' || visualLight === 'WARNING') ? Math.PI : 0;
+  const targetRotation = (light === 'RED' || light === 'WARNING') ? Math.PI : 0;
 
   useFrame(() => {
     if (headRef.current) {
@@ -123,23 +112,19 @@ function App() {
 
   const isConnecting = useRef(false);
 
-  // 1. Sincronizar el botón de Muteo
   useEffect(() => {
     audio.setMuted(!soundEnabled);
   }, [soundEnabled]);
 
-  // 2. Cerebro Acústico: Reacciona a las fases del juego
   useEffect(() => {
     if (!soundEnabled) {
-      audio.stopAll(); // Botón de pánico si muteas en pleno juego
+      audio.stopAll(); 
       return;
     }
 
-    // Purgamos sonidos conflictivos en cada cambio de fase
     audio.stop('scanning');
     audio.stop('win'); 
 
-    // Solo suena en PRE_LOBBY. Si el host abre las puertas (LOBBY), se silencia.
     if (gameStatus === "PRE_LOBBY") {
       audio.play('bgLobby');
     } else {
@@ -148,22 +133,17 @@ function App() {
 
     if (gameStatus === "PLAYING") {
       if (lightColor === "GREEN") {
-        audio.play('greenLight', true);
+        audio.play('greenLight', true);        
+      } else if (lightColor === "WARNING") {
+        audio.play('redLight', true);       
       } else if (lightColor === "RED") {
-        audio.play('redLight', true);
-        
-        setTimeout(() => {
-          if (gameStatus === "PLAYING" && lightColor === "RED") {
-            audio.play('scanning', true);
-          }
-        }, 1200); 
+        audio.play('scanning', true);
       }
       
     } else if (gameStatus === "GAME_OVER") {
-      // Solo hay victoria si el sistema cuenta sobrevivientes
       const hasWinner = Object.values(players).some((p: any) => p.isAlive);
       if (hasWinner) {
-        audio.play('win', true); // Al estar en loop=false en el Engine, no se repetirá infinitamente
+        audio.play('win', true);
       }
     }
   }, [gameStatus, lightColor, soundEnabled]);
@@ -173,7 +153,6 @@ function App() {
       if (gameStatus === "PRE_LOBBY" && soundEnabled) {
         audio.play('bgLobby');
       }
-      // Una vez que el usuario hace el primer clic, quitamos el evento para no saturar
       document.removeEventListener('pointerdown', unlockAudio);
     };
     
@@ -181,7 +160,7 @@ function App() {
     return () => document.removeEventListener('pointerdown', unlockAudio);
   }, [gameStatus, soundEnabled]);
 
-  // 3. SENSOR DE ELIMINACIONES (El francotirador blindado)
+  // SENSOR DE ELIMINACIONES (El francotirador)
   const previousPlayersStatus = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -199,8 +178,6 @@ function App() {
     
     Object.entries(players).forEach(([id, p]: [string, any]) => {
       currentStatus[id] = p.isAlive;
-      
-      // Detecta la eliminación puramente por el cambio booleano, sin importar la fase del juego
       if (previousPlayersStatus.current[id] === true && p.isAlive === false) {
         somebodyDied = true;
       }
@@ -213,13 +190,12 @@ function App() {
     previousPlayersStatus.current = currentStatus;
   }, [players, soundEnabled]);
 
-  // 4. SENSOR DE CONEXIONES (El timbre del lobby)
+  // SENSOR DE CONEXIONES (El timbre del lobby)
   const prevPlayerCount = useRef<number>(0);
 
   useEffect(() => {
     const currentPlayerCount = Object.keys(players).length;
     
-    // Si estamos en la fase de registro y la cantidad de jugadores SUBE
     if ((gameStatus === "PRE_LOBBY" || gameStatus === "LOBBY") && soundEnabled) {
       if (currentPlayerCount > prevPlayerCount.current) {
         audio.play('join', true);
@@ -230,9 +206,8 @@ function App() {
   }, [players, gameStatus, soundEnabled]);
 
 
-  // 5. SENSOR DE CUENTA REGRESIVA (El pitido)
+  // SENSOR DE CUENTA REGRESIVA (El pitido)
   useEffect(() => {
-    // Cada vez que el contador cambie (3, 2, 1) y no sea nulo, reproducimos el bip
     if (countdown !== null && soundEnabled) {
       audio.play('countdown', true);
     }
@@ -327,7 +302,7 @@ function App() {
       : window.location.origin;
   const playerCount = Object.keys(players).length;
 
-  // 1. PANTALLA DE CONEXIÓN
+  // PANTALLA DE CONEXIÓN
   if (gameStatus === "CONNECTING") {
     return (
       <div style={{ width: '100vw', height: '100vh', backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -346,7 +321,7 @@ function App() {
   // ==================== INTERFAZ PRINCIPAL ====================
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', fontFamily: 'sans-serif' }}>
-      {/* BOTÓN DE TUTORIAL FLOTANTE (BRUTALISTA) */}
+      {/* BOTÓN DE TUTORIAL */}
       {gameStatus === "PRE_LOBBY" && (
         <button 
           onClick={() => { audio.play('click', true); setShowTutorial(true); }}
@@ -356,7 +331,7 @@ function App() {
         </button>
       )}
 
-      {/* BOTÓN DE AJUSTES FLOTANTE (BRUTALISTA) */}
+      {/* BOTÓN DE AJUSTES */}
       {gameStatus === "PRE_LOBBY" && (
         <button 
           onClick={() => { audio.play('click', true); setShowSettings(true); }}
@@ -434,7 +409,6 @@ function App() {
             </h2>
 
             <div style={{ display: 'flex', gap: '30px', marginBottom: '40px' }}>
-              {/* Instrucción 1: LUZ VERDE */}
               <div style={{ flex: 1, border: '4px solid #14B8A6', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #0a221f' }}>
                 <h3 style={{ color: '#14B8A6', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>1. LUZ VERDE</h3>
                 <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
@@ -444,7 +418,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Instrucción 2: LUZ ROJA */}
               <div style={{ flex: 1, border: '4px solid #E91E63', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #220000' }}>
                 <h3 style={{ color: '#E91E63', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>2. LUZ ROJA</h3>
                 <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>¡DETENTE! Mantén el dedo presionado sobre el sensor y compensa la fuerza para mantener el indicador en el centro.</p>
@@ -469,12 +442,11 @@ function App() {
         </div>
       )}
 
-      {/* 2. CORTINA DE LOBBY (CÓDIGO QR) */}
+      {/* CÓDIGO QR */}
       {gameStatus === "PRE_LOBBY" && (
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', padding: '40px', boxSizing: 'border-box' }}>
           
-          <div style={{ display: 'flex', width: '100%', maxWidth: '1400px', height: '100%', gap: '40px' }}>
-            
+          <div style={{ display: 'flex', width: '100%', maxWidth: '1400px', height: '100%', gap: '40px' }}>           
             {/* PANEL IZQUIERDO: Dificultad */}
             <div style={{ flex: '1', height: '380px', alignSelf: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '30px', background: '#050505', border: '4px solid #14B8A6', boxShadow: '12px 12px 0px #0a221f' }}>
               <h2 style={{ color: '#14B8A6', fontSize: '20px', fontWeight: '900', letterSpacing: '6px', marginBottom: '30px', textShadow: '2px 2px 0px #0a221f' }}>DIFICULTAD</h2>
@@ -505,16 +477,13 @@ function App() {
             </div>
 
             {/* PANEL CENTRAL: Marca y Conexión (QR) */}
-            <div style={{ flex: '1.5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              
+            <div style={{ flex: '1.5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>             
               <h1 style={{ fontSize: '80px', color: '#E91E63', margin: '0 0 10px 0', letterSpacing: '20px', fontWeight: '900', textShadow: '8px 8px 0px #220000', lineHeight: '1.1', textAlign: 'center' }}>
                 SQUID <br/><span style={{ color: 'white', textShadow: '8px 8px 0px #333' }}>GAME</span>
-              </h1>
-              
+              </h1>             
               <h2 style={{ fontSize: '20px', fontWeight: '900', color: 'white', letterSpacing: '8px', margin: '0 0 30px 0' }}>
                 LUZ <span style={{ color: '#E91E63' }}>ROJA</span> <span style={{ color: '#333', margin: '0 15px' }}>|</span> LUZ <span style={{ color: '#14B8A6' }}>VERDE</span>
-              </h2>
-              
+              </h2>             
               <div style={{ background: 'white', padding: '20px', border: '8px solid #E91E63', marginBottom: '40px', boxShadow: '15px 15px 0px #220000' }}>
                 <QRCodeCanvas value={gamepadUrl} size={250} level={"H"} />
               </div>
@@ -536,10 +505,8 @@ function App() {
               </button>
             </div>
 
-            {/* PANEL DERECHO: El "Lobby" (Caja de Contención) */}
+            {/* PANEL DERECHO: El "Lobby" */}
             <div style={{ flex: '1', height: '380px', alignSelf: 'center', display: 'flex', flexDirection: 'column', padding: '30px', background: '#050505', border: '4px solid #E91E63', boxShadow: '12px 12px 0px #220000', position: 'relative', overflow: 'hidden' }}>
-              
-              {/* Marca de agua / Fondo de celda */}
               <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(#111 2px, transparent 2px), linear-gradient(90deg, #111 2px, transparent 2px)', backgroundSize: '40px 40px', opacity: 0.5, pointerEvents: 'none' }}></div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '4px solid #220000', paddingBottom: '15px', marginBottom: '20px', zIndex: 1 }}>
@@ -547,7 +514,6 @@ function App() {
                 <span style={{ fontSize: '30px', color: '#14B8A6', fontWeight: '900', lineHeight: 1 }}>{playerCount}</span>
               </div>
               
-              {/* Contenedor escrolleable para los jugadores */}
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1, paddingRight: '10px' }}>
                 {Object.values(players).length === 0 ? (
                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontWeight: '900', letterSpacing: '4px', textAlign: 'center' }}>ESPERANDO CONEXIONES...</div>
@@ -561,12 +527,11 @@ function App() {
                 )}
               </div>
             </div>
-
           </div>
         </div>
       )}
       
-      {/* 3. PANEL DE CONTROL COMPACTO (MAESTRO) */}
+      {/* PANEL DE CONTROL (MAESTRO) */}
       {isPanelVisible && (
         <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, background: 'black', padding: '20px', color: 'white', border: '4px solid #E91E63', boxShadow: '8px 8px 0px #220000', width: 'auto', minWidth: '260px' }}>
           
@@ -603,7 +568,7 @@ function App() {
         </div>
       )}
 
-      {/* 4. OVERLAYS DE ACCIÓN A PRUEBA DE COLISIONES */}
+      {/* OVERLAYS DE ACCIÓN A PRUEBA DE COLISIONES */}
       {gameStatus === "STARTING" && countdown !== null && (
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#E91E63', fontSize: '200px', fontWeight: '900', textShadow: '15px 15px 0px #220000', animation: 'pulse 1s infinite' }}>
           {countdown}
@@ -639,7 +604,7 @@ function App() {
         </div>
       )}
 
-      {/* 5. RENDERIZADO 3D */}
+      {/* RENDERIZADO 3D */}
       <Canvas camera={{ position: [0, 8, -20], fov: 60 }} shadows dpr={[1, 2]}>
         <Sky sunPosition={[50, 20, -20]} turbidity={0.3} rayleigh={0.5} />
         <SoftShadows size={12} samples={10} focus={0.5} />

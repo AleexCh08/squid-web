@@ -31,7 +31,7 @@ function App() {
   const outCenterTimer = useRef(0); 
   const isWarningRef = useRef(false); 
 
-  // Blindaje de Input (001 - 456)
+  // Blindaje de Input
   const handleNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, ''); 
     if (rawValue.length > 3) return; 
@@ -380,14 +380,11 @@ function App() {
       </div>
 
       <div id="game-ui" onPointerDown={enterFullScreen} className="flex flex-col h-screen bg-[#050505] relative overflow-hidden font-sans select-none">
-        
-        {/* Viñeta indicadora de luz */}
         <div className={`absolute inset-0 pointer-events-none transition-all duration-300 z-0 ${
           lightColor === 'GREEN' ? 'shadow-[inset_0_0_80px_rgba(20,184,166,0.15)]' : 
           lightColor === 'RED' ? 'shadow-[inset_0_0_120px_rgba(233,30,99,0.2)]' : ''
         }`}></div>
 
-        {/* Barra superior */}
         <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center border-b border-[#222] bg-[#0a0a0a]/90 z-20 pointer-events-none shadow-[0_5px_20px_rgba(0,0,0,0.8)]">
           <span className="font-black text-[#E91E63] ml-4 tracking-[0.2em] text-lg">#{playerName}</span>
           
@@ -413,7 +410,6 @@ function App() {
         </div>
 
         <div className="flex-1 flex w-full relative z-10">
-          {/* BOTÓN IZQUIERDO */}
           <div 
             onPointerDown={() => handleStep('L')}
             className={`flex-1 border-r border-[#111] flex flex-col items-center justify-center transition-all cursor-pointer touch-none relative

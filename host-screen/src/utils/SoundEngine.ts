@@ -1,11 +1,9 @@
-// host-screen/src/utils/SoundEngine.ts
-
 class SoundEngine {
   private sounds: Record<string, HTMLAudioElement> = {};
   private isMuted: boolean = false;
 
   constructor() {
-    // 1. Precarga de todos los audios en memoria
+    // Precarga de todos los audios en memoria
     this.sounds = {
       bgLobby: new Audio('/sounds/bg_lobby.mp3'),
       greenLight: new Audio('/sounds/green_light.mp3'),
@@ -47,15 +45,13 @@ class SoundEngine {
     }
   }
 
-  // Reproducir un sonido (con opción a reiniciarlo si ya estaba sonando)
+  // Reproducir un sonido 
   public play(name: keyof typeof this.sounds, forceRestart: boolean = false) {
     if (this.isMuted || !this.sounds[name]) return;
 
     if (forceRestart) {
       this.sounds[name].currentTime = 0;
     }
-    
-    // El .catch evita errores feos en consola si el navegador bloquea el autoplay
     this.sounds[name].play().catch(e => console.warn(`Navegador bloqueó el audio ${name}:`, e));
   }
 
@@ -76,5 +72,4 @@ class SoundEngine {
   }
 }
 
-// Exportamos una única instancia (Singleton) para toda la aplicación
 export const audio = new SoundEngine();

@@ -299,7 +299,7 @@ function App() {
 
   const gamepadUrl = isLocal
       ? `http://${window.location.hostname}:5173` 
-      : window.location.origin;
+      : "https://gamepad-squid.netlify.app/";
   const playerCount = Object.keys(players).length;
 
   // PANTALLA DE CONEXIÓN

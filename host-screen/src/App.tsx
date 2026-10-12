@@ -90,7 +90,7 @@ function CameraRig({ players }: { players: any }) {
 const isLocal = window.location.hostname === "localhost" || window.location.hostname.startsWith("192.168.");
 const BACKEND_URL = isLocal 
   ? `http://${window.location.hostname}:2567` 
-  : "https://squid-web-elqu.onrender.com/"; // CAMBIAR
+  : "https://squid-web-elqu.onrender.com"; // CAMBIAR
 
 const WS_URL = BACKEND_URL.replace(/^http/, 'ws');
 const client = new Client(WS_URL);

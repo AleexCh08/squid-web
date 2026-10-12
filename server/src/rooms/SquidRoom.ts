@@ -13,12 +13,13 @@ export class Player extends Schema {
 export class GameState extends Schema {
   @type("string") status: string = "PRE_LOBBY"; 
   @type("string") light: string = "RED";
+  @type("string") difficulty: string = "NORMAL";
   
   @type({ map: Player }) players = new MapSchema<Player>();
 }
 
 export class SquidRoom extends Room {
-  private distancePerStep = 0.25; 
+  private distancePerStep = 1.25; 
   private lightTimeout?: NodeJS.Timeout;
   private readonly FINISH_LINE_Z = 100;
 
@@ -40,6 +41,15 @@ export class SquidRoom extends Room {
 
   onCreate(options: any) {
     this.setState(new GameState());
+
+    this.onMessage("SET_DIFFICULTY", (client, data: { level: string, distance: number }) => {
+      const state = this.state as GameState;
+      if (state.status === "PRE_LOBBY") {
+        state.difficulty = data.level;
+        this.distancePerStep = data.distance;
+        console.log(`[SISTEMA] Dificultad cambiada a: ${data.level} (Paso: ${data.distance})`);
+      }
+    });
 
     this.onMessage("GO_TO_ARENA", (client, message) => {
       const state = this.state as GameState;

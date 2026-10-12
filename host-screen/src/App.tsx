@@ -104,6 +104,7 @@ function App() {
   const [countdown, setCountdown] = useState<number | null>(null);
 
   const [showTutorial, setShowTutorial] = useState(false);
+  const [difficulty, setDifficulty] = useState("NORMAL");
 
   const isConnecting = useRef(false);
 
@@ -132,6 +133,7 @@ function App() {
         r.onStateChange((state: any) => {
           setGameStatus(state.status);
           setLightColor(state.light);
+          setDifficulty(state.difficulty);
 
           const activePlayers: any = {};
           state.players.forEach((player: any, sessionId: string) => {
@@ -174,6 +176,9 @@ function App() {
   const goToArena = () => { if (room) room.send("GO_TO_ARENA"); };
   const restartMatch = () => { if (room) room.send("RESTART_MATCH"); };
   const returnToQr = () => { if (room) room.send("RETURN_TO_QR"); };
+  const changeDifficulty = (level: string, distance: number) => {
+    if (room) room.send("SET_DIFFICULTY", { level, distance });
+  };
 
   const gamepadUrl = isLocal
       ? `http://${window.location.hostname}:5173` 
@@ -222,7 +227,7 @@ function App() {
               {/* Instrucción 1: LUZ VERDE */}
               <div style={{ flex: 1, border: '4px solid #14B8A6', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #0a221f' }}>
                 <h3 style={{ color: '#14B8A6', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>1. LUZ VERDE</h3>
-                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
+                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>¡AVANZA! Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
                 <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'center' }}>
                   <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkL 1s infinite' }}>L</div>
                   <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkR 1s infinite' }}>R</div>
@@ -255,47 +260,98 @@ function App() {
       )}
       {/* 2. CORTINA DE LOBBY (CÓDIGO QR) */}
       {gameStatus === "PRE_LOBBY" && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', padding: '40px', boxSizing: 'border-box' }}>
           
-          <h1 style={{ fontSize: '70px', color: '#E91E63', margin: '0 0 10px 0', letterSpacing: '15px', fontWeight: '900', textShadow: '8px 8px 0px #220000', lineHeight: '1.1' }}>
-            SQUID <span style={{ color: 'white', textShadow: '8px 8px 0px #333' }}>GAME</span>
-          </h1>
-          
-          <h2 style={{ fontSize: '24px', fontWeight: '900', color: 'white', letterSpacing: '8px', margin: '0 0 15px 0' }}>
-            LUZ <span style={{ color: '#E91E63' }}>ROJA</span> <span style={{ color: '#333', margin: '0 15px' }}>|</span> LUZ <span style={{ color: '#14B8A6' }}>VERDE</span>
-          </h2>
+          <div style={{ display: 'flex', width: '100%', maxWidth: '1400px', height: '100%', gap: '40px' }}>
+            
+            {/* PANEL IZQUIERDO: Dificultad */}
+            <div style={{ flex: '1', height: '380px', alignSelf: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '30px', background: '#050505', border: '4px solid #14B8A6', boxShadow: '12px 12px 0px #0a221f' }}>
+              <h2 style={{ color: '#14B8A6', fontSize: '20px', fontWeight: '900', letterSpacing: '6px', marginBottom: '30px', textShadow: '2px 2px 0px #0a221f' }}>DIFICULTAD</h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <button 
+                  onClick={() => changeDifficulty("FACIL", 2)}
+                  style={{ padding: '20px', background: difficulty === "FACIL" ? '#14B8A6' : 'transparent', color: difficulty === "FACIL" ? 'black' : '#14B8A6', border: '4px solid #14B8A6', fontWeight: '900', letterSpacing: '4px', fontSize: '16px', cursor: 'pointer', transition: 'all 0.1s', display: 'flex', justifyContent: 'center', position: 'relative' }}
+                >
+                  <span>FÁCIL</span> 
+                  {difficulty === "FACIL" && <span style={{ position: 'absolute', right: '20px' }}>●</span>}
+                </button>
+                <button 
+                  onClick={() => changeDifficulty("NORMAL", 1.25)}
+                  style={{ padding: '20px', background: difficulty === "NORMAL" ? '#14B8A6' : 'transparent', color: difficulty === "NORMAL" ? 'black' : '#14B8A6', border: '4px solid #14B8A6', fontWeight: '900', letterSpacing: '4px', fontSize: '16px', cursor: 'pointer', transition: 'all 0.1s', display: 'flex', justifyContent: 'center', position: 'relative' }}
+                >
+                  <span>NORMAL</span> 
+                  {difficulty === "NORMAL" && <span style={{ position: 'absolute', right: '20px' }}>●</span>}
+                </button>
+                <button 
+                  onClick={() => changeDifficulty("DIFICIL", 0.25)}
+                  style={{ padding: '20px', background: difficulty === "DIFICIL" ? '#14B8A6' : 'transparent', color: difficulty === "DIFICIL" ? 'black' : '#14B8A6', border: '4px solid #14B8A6', fontWeight: '900', letterSpacing: '4px', fontSize: '16px', cursor: 'pointer', transition: 'all 0.1s', display: 'flex', justifyContent: 'center', position: 'relative' }}
+                >
+                  <span>DIFÍCIL</span> 
+                  {difficulty === "DIFICIL" && <span style={{ position: 'absolute', right: '20px' }}>●</span>}
+                </button>
+              </div>
+            </div>
 
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '35px', letterSpacing: '8px', fontWeight: '900' }}>SISTEMA DE EMPAREJAMIENTO</p>
-          
-          <div style={{ background: 'white', padding: '15px', border: '8px solid #E91E63', marginBottom: '25px', boxShadow: '12px 12px 0px #220000' }}>
-            <QRCodeCanvas value={gamepadUrl} size={220} level={"H"} />
+            {/* PANEL CENTRAL: Marca y Conexión (QR) */}
+            <div style={{ flex: '1.5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              
+              <h1 style={{ fontSize: '80px', color: '#E91E63', margin: '0 0 10px 0', letterSpacing: '20px', fontWeight: '900', textShadow: '8px 8px 0px #220000', lineHeight: '1.1', textAlign: 'center' }}>
+                SQUID <br/><span style={{ color: 'white', textShadow: '8px 8px 0px #333' }}>GAME</span>
+              </h1>
+              
+              <h2 style={{ fontSize: '20px', fontWeight: '900', color: 'white', letterSpacing: '8px', margin: '0 0 30px 0' }}>
+                LUZ <span style={{ color: '#E91E63' }}>ROJA</span> <span style={{ color: '#333', margin: '0 15px' }}>|</span> LUZ <span style={{ color: '#14B8A6' }}>VERDE</span>
+              </h2>
+              
+              <div style={{ background: 'white', padding: '20px', border: '8px solid #E91E63', marginBottom: '40px', boxShadow: '15px 15px 0px #220000' }}>
+                <QRCodeCanvas value={gamepadUrl} size={250} level={"H"} />
+              </div>
+
+              <button 
+                onClick={goToArena}
+                disabled={playerCount === 0}
+                style={{ 
+                  padding: '20px 40px', width: '100%', maxWidth: '400px', fontSize: '20px', fontWeight: '900', letterSpacing: '6px',
+                  cursor: playerCount === 0 ? 'not-allowed' : 'pointer', 
+                  background: playerCount === 0 ? 'transparent' : '#E91E63', 
+                  color: playerCount === 0 ? '#444' : 'black', 
+                  border: playerCount === 0 ? '4px solid #222' : '4px solid #E91E63', 
+                  boxShadow: playerCount === 0 ? 'none' : '10px 10px 0px #220000',
+                  transition: 'all 0.1s', textTransform: 'uppercase'
+                }}
+              >
+                Iniciar Juego
+              </button>
+            </div>
+
+            {/* PANEL DERECHO: El "Lobby" (Caja de Contención) */}
+            <div style={{ flex: '1', height: '380px', alignSelf: 'center', display: 'flex', flexDirection: 'column', padding: '30px', background: '#050505', border: '4px solid #E91E63', boxShadow: '12px 12px 0px #220000', position: 'relative', overflow: 'hidden' }}>
+              
+              {/* Marca de agua / Fondo de celda */}
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(#111 2px, transparent 2px), linear-gradient(90deg, #111 2px, transparent 2px)', backgroundSize: '40px 40px', opacity: 0.5, pointerEvents: 'none' }}></div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '4px solid #220000', paddingBottom: '15px', marginBottom: '20px', zIndex: 1 }}>
+                <h2 style={{ color: '#E91E63', fontSize: '20px', fontWeight: '900', letterSpacing: '4px', margin: 0, textShadow: '2px 2px 0px #220000' }}>SUJETOS</h2>
+                <span style={{ fontSize: '30px', color: '#14B8A6', fontWeight: '900', lineHeight: 1 }}>{playerCount}</span>
+              </div>
+              
+              {/* Contenedor escrolleable para los jugadores */}
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1, paddingRight: '10px' }}>
+                {Object.values(players).length === 0 ? (
+                   <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontWeight: '900', letterSpacing: '4px', textAlign: 'center' }}>ESPERANDO CONEXIONES...</div>
+                ) : (
+                  Object.values(players).map((p: any, i) => (
+                    <div key={i} style={{ background: 'black', border: '4px solid #E91E63', padding: '15px 20px', color: '#E91E63', fontWeight: '900', letterSpacing: '4px', fontSize: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>#{p.name}</span>
+                      <span style={{ fontSize: '10px', color: '#666', border: '2px solid #333', padding: '4px 8px' }}>{p.gender}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
           </div>
-
-          <h2 style={{ color: '#14B8A6', marginBottom: '15px', letterSpacing: '4px', fontSize: '14px', fontWeight: '900' }}>SUJETOS DETECTADOS: <span style={{fontSize: '20px'}}>{playerCount}</span></h2>
-          
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '800px', marginBottom: '40px', minHeight: '50px' }}>
-            {Object.values(players).map((p: any, i) => (
-              <span key={i} style={{ background: 'black', border: '4px solid #E91E63', padding: '8px 16px', color: '#E91E63', fontWeight: '900', letterSpacing: '2px', boxShadow: '4px 4px 0px #220000', fontSize: '14px' }}>
-                #{p.name}
-              </span>
-            ))}
-          </div>
-
-          <button 
-            onClick={goToArena}
-            disabled={playerCount === 0}
-            style={{ 
-              padding: '15px 60px', fontSize: '18px', fontWeight: '900', letterSpacing: '6px',
-              cursor: playerCount === 0 ? 'not-allowed' : 'pointer', 
-              background: playerCount === 0 ? 'transparent' : '#E91E63', 
-              color: playerCount === 0 ? '#444' : 'black', 
-              border: playerCount === 0 ? '4px solid #222' : '4px solid #E91E63', 
-              boxShadow: playerCount === 0 ? 'none' : '8px 8px 0px #220000',
-              transition: 'all 0.1s', textTransform: 'uppercase'
-            }}
-          >
-            Aperturar Puertas
-          </button>
         </div>
       )}
       

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Sky, Text, useGLTF, Clone } from '@react-three/drei';
+import { Sky, Text, useGLTF, Clone, SoftShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import { Client, Room } from 'colyseus.js';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -17,14 +17,14 @@ function Doll({ light }: { light: string }) {
   });
 
   return (
-    <group position={[0, 0, 110]}>
-      <mesh position={[6, 5, 0]}><cylinderGeometry args={[0.5, 0.8, 10]} /><meshStandardMaterial color="#4E342E" /></mesh>
-      <mesh position={[6, 12, 0]}><sphereGeometry args={[4]} /><meshStandardMaterial color="#2E7D32" /></mesh>
-      <mesh position={[0, 4, 0]}><cylinderGeometry args={[1, 2, 8]} /><meshStandardMaterial color="#FF9800" /></mesh>
+    <group position={[0, 0, 110]} castShadow>
+      <mesh position={[6, 5, 0]} castShadow receiveShadow><cylinderGeometry args={[0.5, 0.8, 10]} /><meshStandardMaterial color="#4E342E" /></mesh>
+      <mesh position={[6, 12, 0]} castShadow receiveShadow><sphereGeometry args={[4]} /><meshStandardMaterial color="#2E7D32" /></mesh>
+      <mesh position={[0, 4, 0]} castShadow receiveShadow><cylinderGeometry args={[1, 2, 8]} /><meshStandardMaterial color="#FF9800" /></mesh>
       <group ref={headRef} position={[0, 9, 0]}>
-        <mesh><sphereGeometry args={[1.5]} /><meshStandardMaterial color="#FFCCBC" /></mesh>
-        <mesh position={[-0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshBasicMaterial color="black" /></mesh>
-        <mesh position={[0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshBasicMaterial color="black" /></mesh>
+        <mesh castShadow receiveShadow><sphereGeometry args={[1.5]} /><meshStandardMaterial color="#FFCCBC" /></mesh>
+        <mesh position={[-0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshStandardMaterial color="#111" /></mesh>
+        <mesh position={[0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshStandardMaterial color="#111" /></mesh>
       </group>
     </group>
   );
@@ -43,12 +43,27 @@ function PlayerFemale() {
   return <group position={[0, 0, 0]} scale={[2.3, 2.3, 2.3]}><Clone object={scene} castShadow /></group>;
 }
 
-function SceneryDecals() {
+function DaylightArena() {
   return (
     <group>
-      <mesh position={[-29, 14, 40]}><sphereGeometry args={[3, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
-      <mesh position={[-29, 11, 83]}><sphereGeometry args={[2.5, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
-      <mesh position={[29, 13, 80]}><sphereGeometry args={[4, 16, 16]} /><meshBasicMaterial color="blue" /></mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 50]} receiveShadow>
+        <planeGeometry args={[60, 140]} />
+        <meshStandardMaterial color="#d4a373" roughness={0.9} />
+      </mesh>
+      
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} receiveShadow>
+        <planeGeometry args={[60, 1]} />
+        <meshStandardMaterial color="#ffffff" />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 100]} receiveShadow>
+        <planeGeometry args={[60, 3]} />
+        <meshStandardMaterial color="#E91E63" />
+      </mesh>
+
+      <mesh position={[-30, 10, 50]} castShadow receiveShadow><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#9e9e9e" roughness={0.8} /></mesh>
+      <mesh position={[30, 10, 50]} castShadow receiveShadow><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#9e9e9e" roughness={0.8} /></mesh>
+      <mesh position={[0, 10, -20]} castShadow receiveShadow><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#9e9e9e" roughness={0.8} /></mesh>
+      <mesh position={[0, 10, 130]} castShadow receiveShadow><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#9e9e9e" roughness={0.8} /></mesh>
     </group>
   );
 }
@@ -303,31 +318,38 @@ function App() {
       )}
 
       {/* 5. RENDERIZADO 3D */}
-      <Canvas camera={{ position: [0, 8, -20], fov: 60 }}>
+      <Canvas camera={{ position: [0, 8, -20], fov: 60 }} shadows dpr={[1, 2]}>
+        <Sky sunPosition={[50, 20, -20]} turbidity={0.3} rayleigh={0.5} />
+        <SoftShadows size={12} samples={10} focus={0.5} />
+
         <Suspense fallback={null}>  
           <CameraRig players={players} />
-          <Sky sunPosition={[100, 20, 100]} turbidity={0.5} />
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[10, 20, 5]} intensity={1.5} castShadow />
+          
+          <hemisphereLight args={['#ffffff', '#d4a373', 0.6]} />
+          <ambientLight intensity={0.4} />        
+          <directionalLight 
+            position={[50, 50, -30]} 
+            intensity={1.5} 
+            castShadow 
+            shadow-mapSize-width={512} 
+            shadow-mapSize-height={512} 
+            shadow-camera-far={200}
+            shadow-camera-left={-40}
+            shadow-camera-right={40}
+            shadow-camera-top={120}
+            shadow-camera-bottom={-20}
+            shadow-bias={-0.0005}
+          />
 
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 50]}><planeGeometry args={[60, 140]} /><meshStandardMaterial color="#d4a373" roughness={1} /></mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}><planeGeometry args={[60, 1]} /><meshStandardMaterial color="#ffffff" /></mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 100]}><planeGeometry args={[60, 3]} /><meshStandardMaterial color="#E91E63" /></mesh>
+          <DaylightArena />
 
-          <mesh position={[-30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-          <mesh position={[30, 10, 50]}><boxGeometry args={[2, 20, 160]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-          <mesh position={[0, 10, -20]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-          <mesh position={[0, 10, 130]}><boxGeometry args={[60, 20, 2]} /><meshStandardMaterial color="#87CEEB" roughness={1} /></mesh>
-          <SceneryDecals />
-
-          {/* Guardias */}
-          <group position={[-8, 2, 105]}>
-            <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
+          <group position={[-8, 2, 105]} castShadow receiveShadow>
+            <mesh castShadow receiveShadow><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" roughness={0.7} /></mesh>
             <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
             <mesh position={[0, 1, -1.02]}><torusGeometry args={[0.3, 0.06, 16, 32]} /><meshBasicMaterial color="black" /></mesh>
           </group>
-          <group position={[8, 2, 105]}>
-            <mesh><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" /></mesh>
+          <group position={[8, 2, 105]} castShadow receiveShadow>
+            <mesh castShadow receiveShadow><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" roughness={0.7} /></mesh>
             <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
             <mesh position={[0, 1, -1.02]} rotation={[0, 0, Math.PI / 4]}><torusGeometry args={[0.35, 0.06, 4, 4]} /><meshBasicMaterial color="black" /></mesh>
           </group>

@@ -264,55 +264,63 @@ function App() {
         
         <p className="text-[#666] tracking-widest text-xs mb-8">REGISTRO DE JUGADOR</p>
 
-        <form onSubmit={joinGame} className="w-full max-w-sm bg-[#0a0a0a] p-8 border border-[#222] shadow-[0_0_40px_rgba(0,0,0,0.8)] relative z-10">
+        <form onSubmit={joinGame} className="w-full max-w-sm bg-black p-8 border-4 border-[#222] relative z-10 shadow-[8px_8px_0px_#000000]">
           
-          <label className="block text-[#E91E63] text-[10px] font-bold mb-2 tracking-widest text-center uppercase">
-            Número Asignado
+          <label className="block text-[#E91E63] text-[10px] font-black mb-3 tracking-[0.3em] text-center uppercase">
+            Numero asignado
           </label>
           
-          <div className="relative mb-6">
-            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-2xl text-[#333] font-black">#</span>
+          <div className="relative mb-8">
+            <span className="absolute left-0 top-1/2 transform -translate-y-1/2 text-2xl text-[#E91E63] font-black">#</span>
             <input 
               type="number" 
               value={playerName} 
               onChange={handleNumberInput}
               onBlur={formatNumberOnBlur}
-              className="w-full pl-10 pr-4 py-3 bg-black border-2 border-[#222] text-[#E91E63] font-black text-3xl text-center focus:outline-none focus:border-[#E91E63] transition-colors tracking-widest" 
+              className="w-full pl-8 pr-4 py-2 bg-transparent border-b-4 border-[#333] text-white font-black text-5xl text-center focus:outline-none focus:border-[#E91E63] transition-colors tracking-widest rounded-none" 
               placeholder="000" 
             />
           </div>
           
-          <label className="block text-[#E91E63] text-[10px] font-bold mb-4 tracking-widest text-center uppercase">
-            Selección de Avatar
+          <label className="block text-[#E91E63] text-[10px] font-black mb-4 tracking-[0.3em] text-center uppercase">
+            Selección de avatar
           </label>
           
-          <div className="flex gap-4 mb-8">
+          <div className="flex gap-4 mb-10">
             <button 
               type="button" 
               onClick={() => setPlayerGender('M')} 
-              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'M' ? 'border-white bg-[#111] shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'border-[#222] text-[#555] bg-black hover:border-[#444]'}`}
+              className={`flex-1 py-5 font-black border-4 transition-all flex justify-center items-center rounded-none ${
+                playerGender === 'M' 
+                  ? 'border-[#14B8A6] bg-[#14B8A6]/10 text-[#14B8A6] shadow-[4px_4px_0px_#14B8A6]' 
+                  : 'border-[#222] text-[#444] bg-transparent'
+              }`}
             >
-              <div className="w-5 h-5 border-2 border-current"></div>
+              <div className="w-6 h-6 border-4 border-current"></div>
             </button>
             <button 
               type="button" 
               onClick={() => setPlayerGender('F')} 
-              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'F' ? 'border-white bg-[#111] shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'border-[#222] text-[#555] bg-black hover:border-[#444]'}`}
+              className={`flex-1 py-5 font-black border-4 transition-all flex justify-center items-center rounded-none ${
+                playerGender === 'F' 
+                  ? 'border-[#E91E63] bg-[#14B8A6]/10 text-[#E91E63] shadow-[4px_4px_0px_#E91E63]' 
+                  : 'border-[#222] text-[#444] bg-transparent'
+              }`}
             >
-              <div className="w-5 h-5 border-2 border-current rounded-full"></div>
+              <div className="w-6 h-6 border-4 border-current rounded-full"></div>
             </button>
           </div>
 
           <button 
             type="submit" 
             disabled={!isValidPlayer} 
-            className={`w-full py-4 text-sm font-black tracking-[0.2em] transition-all uppercase
+            className={`w-full py-5 text-sm font-black tracking-[0.3em] transition-all uppercase rounded-none border-4
               ${isValidPlayer 
-                ? 'bg-[#E91E63] text-white hover:bg-[#d81b60] shadow-[0_0_20px_rgba(233,30,99,0.4)] cursor-pointer' 
-                : 'bg-[#111] text-[#333] cursor-not-allowed border border-[#222]'
+                ? 'bg-[#E91E63] border-[#E91E63] text-black hover:bg-transparent hover:text-[#E91E63] shadow-[4px_4px_0px_#E91E63] hover:shadow-[0px_0px_0px_#E91E63] hover:translate-y-1 hover:translate-x-1 cursor-pointer' 
+                : 'bg-transparent border-[#222] text-[#333] cursor-not-allowed'
               }`}
           >
-            Entrar
+            CONFIRMAR
           </button>
         </form>
       </div>
@@ -322,18 +330,17 @@ function App() {
   // ================= PANTALLA DE ELIMINADO =================
   if (gameStatus === "ELIMINATED" || !isAlive) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-center relative overflow-hidden">
-        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-[#E91E63]/20 to-transparent opacity-50"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-black p-6 text-center relative overflow-hidden">
         
-        <div className="w-24 h-24 border-[6px] border-[#E91E63] rounded-full mb-8 relative flex items-center justify-center shadow-[0_0_30px_rgba(233,30,99,0.5)] z-10">
-          <div className="w-20 h-1 border-b-[6px] border-[#E91E63] absolute transform -rotate-45"></div>
+        <div className="w-24 h-24 border-8 border-[#E91E63] mb-8 relative flex items-center justify-center shadow-[8px_8px_0px_#E91E63] z-10 bg-transparent rounded-full">
+          <div className="w-20 h-2 bg-[#E91E63] absolute transform -rotate-45"></div>
         </div>
         
-        <h1 className="text-5xl font-black text-[#E91E63] mb-8 tracking-[0.2em] drop-shadow-[0_0_15px_rgba(233,30,99,0.8)] relative z-10">
+        <h1 className="text-5xl font-black text-[#E91E63] mb-8 tracking-[0.2em] relative z-10 drop-shadow-[6px_6px_0px_#220000]">
           ELIMINADO
         </h1>
         
-        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-2 border-[#E91E63] text-[#E91E63] font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#E91E63] hover:text-white transition-all relative z-10">
+        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-4 border-[#E91E63] text-[#E91E63] font-black text-xs tracking-[0.2em] uppercase transition-all relative z-10 shadow-[6px_6px_0px_#E91E63] hover:shadow-[0px_0px_0px_#E91E63] hover:translate-y-1 hover:translate-x-1 hover:bg-[#E91E63] hover:text-black">
           Volver al Inicio
         </button>
       </div>

@@ -13,6 +13,28 @@ function App() {
   const [room, setRoom] = useState<Room | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [playerGender, setPlayerGender] = useState<'M'|'F'>('M');
+
+  const handleNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, ''); 
+    if (rawValue.length > 3) return; 
+    
+    if (rawValue === '') {
+      setPlayerName('');
+      return;
+    }
+    const num = parseInt(rawValue, 10);
+    if (num > 456) return;
+    setPlayerName(rawValue);
+  };
+
+  const formatNumberOnBlur = () => {
+    if (playerName) {
+      const num = parseInt(playerName, 10);
+      if (num === 0) setPlayerName('001'); 
+      else setPlayerName(num.toString().padStart(3, '0'));
+    }
+  };
+
   const [isAlive, setIsAlive] = useState(true);
   
   const [gameStatus, setGameStatus] = useState('LOBBY'); 
@@ -231,17 +253,70 @@ function App() {
   };
 
   if (!room) {
+    const isValidPlayer = playerName.trim().length > 0;
+
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-neutral-900 p-6">
-        <h1 className="text-4xl font-bold text-green-500 mb-8 tracking-widest text-center">LUZ ROJA<br/><span className="text-red-500">LUZ VERDE</span></h1>
-        <form onSubmit={joinGame} className="w-full max-w-sm bg-neutral-800 p-6 rounded-xl shadow-lg border border-neutral-700">
-          <h1 className="text-2xl font-bold white mb-4 text-center uppercase">Coloca tu numero</h1>
-          <input type="number" maxLength={3} value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full px-4 py-3 bg-neutral-900 border border-neutral-600 rounded-lg text-white font-bold text-center focus:outline-none focus:border-green-500 mb-6 uppercase" placeholder="EJ: 456" />
-          <div className="flex gap-4 mb-6">
-            <button type="button" onClick={() => setPlayerGender('M')} className={`flex-1 py-2 font-bold rounded-lg transition-colors ${playerGender === 'M' ? 'bg-blue-600 text-white' : 'bg-neutral-700 text-gray-400'}`}>MASCULINO</button>
-            <button type="button" onClick={() => setPlayerGender('F')} className={`flex-1 py-2 font-bold rounded-lg transition-colors ${playerGender === 'F' ? 'bg-pink-600 text-white' : 'bg-neutral-700 text-gray-400'}`}>FEMENINO</button>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] p-6 text-white font-sans relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none flex flex-col justify-between">
+          <div className="w-full h-1 bg-[#E91E63]"></div>
+          <div className="w-full h-1 bg-[#E91E63]"></div>
+        </div>
+
+        <h1 className="text-4xl font-black text-[#E91E63] mb-2 tracking-[0.3em] text-center drop-shadow-[0_0_15px_rgba(233,30,99,0.5)]">
+          SQUID <br/> <span className="text-white">GAME</span>
+        </h1>
+        <p className="text-[#888] tracking-widest text-sm mb-10">REGISTRO DE JUGADOR</p>
+
+        <form onSubmit={joinGame} className="w-full max-w-sm bg-[#111] p-8 border border-[#333] shadow-[0_0_40px_rgba(0,0,0,0.8)] relative z-10">
+          
+          <label className="block text-[#E91E63] text-xs font-bold mb-2 tracking-widest text-center uppercase">
+            Número Asignado
+          </label>
+          
+          <div className="relative mb-8">
+            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-3xl text-[#444] font-black">#</span>
+            <input 
+              type="number" 
+              value={playerName} 
+              onChange={handleNumberInput}
+              onBlur={formatNumberOnBlur}
+              className="w-full pl-12 pr-4 py-4 bg-black border-2 border-[#333] text-[#E91E63] font-black text-4xl text-center focus:outline-none focus:border-[#E91E63] transition-colors tracking-widest" 
+              placeholder="000" 
+            />
           </div>
-          <button type="submit" disabled={!playerName.trim()} className="w-full py-4 bg-green-600 text-white font-bold rounded-lg transition-colors">ENTRAR</button>
+          
+          <label className="block text-[#E91E63] text-xs font-bold mb-4 tracking-widest text-center uppercase">
+            Selección de Avatar
+          </label>
+          
+          <div className="flex gap-4 mb-8">
+            <button 
+              type="button" 
+              onClick={() => setPlayerGender('M')} 
+              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'M' ? 'border-white text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'border-[#333] text-[#555] bg-black hover:border-[#666]'}`}
+            >
+              <div className="w-6 h-6 border-2 border-current"></div>
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setPlayerGender('F')} 
+              className={`flex-1 py-4 font-bold border-2 transition-all flex justify-center items-center ${playerGender === 'F' ? 'border-white text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'border-[#333] text-[#555] bg-black hover:border-[#666]'}`}
+            >
+              <div className="w-6 h-6 border-2 border-current rounded-full"></div>
+            </button>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={!isValidPlayer} 
+            className={`w-full py-5 font-black tracking-[0.2em] transition-all uppercase
+              ${isValidPlayer 
+                ? 'bg-[#E91E63] text-white hover:bg-[#d81b60] shadow-[0_0_20px_rgba(233,30,99,0.4)] cursor-pointer' 
+                : 'bg-[#222] text-[#555] cursor-not-allowed border border-[#333]'
+              }`}
+          >
+            Aceptar Términos
+          </button>
         </form>
       </div>
     );

@@ -1,14 +1,13 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Sky, Text, useGLTF, Clone, Stats } from '@react-three/drei';
+import { Sky, Text, useGLTF, Clone } from '@react-three/drei';
 import * as THREE from 'three';
 import { Client, Room } from 'colyseus.js';
+import { QRCodeCanvas } from 'qrcode.react';
 
-// 1. LA MUÑECA (Componente Reactivo a la luz)
+// La Muñeca
 function Doll({ light }: { light: string }) {
   const headRef = useRef<THREE.Group>(null);
-
-  // La muñeca mira a los jugadores si es ROJO o ADVERTENCIA
   const targetRotation = (light === 'RED' || light === 'WARNING') ? Math.PI : 0;
 
   useFrame(() => {
@@ -46,43 +45,10 @@ function Doll({ light }: { light: string }) {
   );
 }
 
-// MODELO GEOMÉTRICO (COMENTADO PARA RESPALDO)
-/*
-function PlayerCharacter() {
-  return (
-    <group position={[0, 1, 0]}>
-
-      <mesh position={[-0.25, -0.5, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 1]} />
-        <meshStandardMaterial color="#00796B" />
-      </mesh>
-      <mesh position={[0.25, -0.5, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 1]} />
-        <meshStandardMaterial color="#00796B" />
-      </mesh>
-
-      <mesh position={[0, 0.4, 0]}>
-        <cylinderGeometry args={[0.35, 0.35, 1]} />
-        <meshStandardMaterial color="#009688" />
-      </mesh>
-
-      <mesh position={[0, 0.4, 0.36]}>
-        <planeGeometry args={[0.15, 1]} />
-        <meshBasicMaterial color="white" />
-      </mesh>
-
-      <mesh position={[0, 1.1, 0]}>
-        <sphereGeometry args={[0.3]} />
-        <meshStandardMaterial color="#FFCCBC" />
-      </mesh>
-    </group>
-  );
-} 
-*/
+// Modelos (Jugadores)
 useGLTF.preload('/playerM.glb');
 useGLTF.preload('/playerF.glb');
 
-// COMPONENTE MASCULINO
 function PlayerMale() {
   const { scene } = useGLTF('/playerM.glb');
   return (
@@ -92,7 +58,6 @@ function PlayerMale() {
   );
 }
 
-// COMPONENTE FEMENINO
 function PlayerFemale() {
   const { scene } = useGLTF('/playerF.glb');
   return (
@@ -101,7 +66,6 @@ function PlayerFemale() {
     </group>
   );
 }
-
 
 function SceneryDecals() {
   return (
@@ -114,16 +78,14 @@ function SceneryDecals() {
   );
 }
 
-// 2. CÁMARA INTELIGENTE
+// CÁMARA INTELIGENTE
 function CameraRig({ players }: { players: any }) {
   useFrame((state) => {
     const playerArray = Object.values(players) as any[];
     const alivePlayers = playerArray.filter(p => p.isAlive);
     
     if (alivePlayers.length > 0) {
-      // Buscar al jugador más adelantado
       const maxZ = Math.max(...alivePlayers.map(p => p.zPos || 0));
-      // Frenar la cámara en Z=90 para no atravesar a la muñeca
       const clampedZ = Math.min(maxZ, 90); 
       
       const targetPosition = new THREE.Vector3(0, 8, clampedZ - 20);
@@ -134,14 +96,19 @@ function CameraRig({ players }: { players: any }) {
   return null;
 }
 
-// 3. LA APLICACIÓN PRINCIPAL
-const client = new Client("ws://192.168.1.6:2567");
+// LA APLICACIÓN PRINCIPAL
+const isLocal = window.location.hostname === "localhost" || window.location.hostname.startsWith("192.168.");
+const BACKEND_URL = isLocal 
+  ? `http://${window.location.hostname}:2567` 
+  : "https://tu-futuro-backend.onrender.com"; // Cambiarás esto al subirlo a la nube
+
+const WS_URL = BACKEND_URL.replace(/^http/, 'ws');
+const client = new Client(WS_URL);
 
 function App() {
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<any>({});
   
-  // Variables locales extraídas del servidor para gobernar la UI
   const [gameStatus, setGameStatus] = useState("LOBBY");
   const [lightColor, setLightColor] = useState("RED");
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -155,7 +122,7 @@ function App() {
 
     const connectHost = async () => {
       try {
-        const response = await fetch(`http://192.168.1.6:2567/matchmake/joinOrCreate/squid_room`, {
+        const response = await fetch(`${BACKEND_URL}/matchmake/joinOrCreate/squid_room`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: "HOST_ADMIN" })
@@ -194,7 +161,6 @@ function App() {
     };
   }, []);
 
-  // Temporizador local de 3 segundos en el Host cuando el servidor dicta "STARTING"
   useEffect(() => {
     if (gameStatus === "STARTING") {
       setCountdown(3);
@@ -209,23 +175,60 @@ function App() {
 
   const startGame = () => { 
     if (room) room.send("HOST_START_GAME"); 
-    // Disparar pantalla completa al interactuar con el botón
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
     }
   };
-  const restartGame = () => { if (room) room.send("RESTART_GAME"); };
+  const goToArena = () => { if (room) room.send("GO_TO_ARENA"); };
+  const restartMatch = () => { if (room) room.send("RESTART_MATCH"); };
+  const returnToQr = () => { if (room) room.send("RETURN_TO_QR"); };
+
+  const gamepadUrl = isLocal
+      ? `http://${window.location.hostname}:5173` 
+      : window.location.origin;
+  const playerCount = Object.keys(players).length;
 
   const isPanelVisible = gameStatus === "LOBBY" || gameStatus === "GAME_OVER";
-  
-  // Calcular si hubo ganadores para alterar el título del panel
   const winner: any = gameStatus === "GAME_OVER" ? Object.values(players).find((p: any) => p.isAlive) : null;
   const hasWinner = !!winner;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       
-      {/* INTERFAZ 2D (Panel de Control) */}
+      {gameStatus === "PRE_LOBBY" && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif', color: 'white' }}>
+          <h1 style={{ fontSize: '50px', color: '#E91E63', marginBottom: '10px', letterSpacing: '8px', fontWeight: '900' }}>LUZ ROJA, LUZ VERDE</h1>
+          <p style={{ fontSize: '20px', color: '#888', marginBottom: '40px' }}>Escanea para conectar tu Gamepad</p>
+          
+          <div style={{ background: 'white', padding: '20px', borderRadius: '15px', marginBottom: '40px', boxShadow: '0 0 30px rgba(233, 30, 99, 0.3)' }}>
+            <QRCodeCanvas value={gamepadUrl} size={250} level={"H"} />
+          </div>
+
+          <h2 style={{ color: '#28a745', marginBottom: '15px' }}>Jugadores en sala: {playerCount}</h2>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '600px', marginBottom: '40px', minHeight: '40px' }}>
+            {Object.values(players).map((p: any, i) => (
+              <span key={i} style={{ background: '#222', border: '1px solid #444', padding: '8px 16px', borderRadius: '20px', fontWeight: 'bold' }}>
+                {p.name}
+              </span>
+            ))}
+          </div>
+
+          <button 
+            onClick={goToArena}
+            disabled={playerCount === 0}
+            style={{ 
+              padding: '20px 60px', fontSize: '24px', fontWeight: 'bold', borderRadius: '10px', 
+              cursor: playerCount === 0 ? 'not-allowed' : 'pointer', 
+              background: playerCount === 0 ? '#333' : '#28a745', 
+              color: playerCount === 0 ? '#666' : 'white', 
+              border: 'none', transition: 'all 0.3s'
+            }}
+          >
+            IR AL ESCENARIO
+          </button>
+        </div>
+      )}
+      
       {isPanelVisible && (
         <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, background: 'rgba(0,0,0,0.9)', padding: '25px', color: 'white', borderRadius: '12px', fontFamily: 'sans-serif', border: '1px solid #444' }}>
           <h2 style={{ margin: '0 0 15px 0', color: '#ffc107' }}>Control Maestro</h2>
@@ -240,15 +243,19 @@ function App() {
               INICIAR PARTIDA
             </button>
           ) : (
-            <button onClick={restartGame} style={{ padding: '15px', width: '100%', cursor: 'pointer', background: '#ffc107', color: 'black', border: 'none', fontWeight: 'bold', fontSize: '18px', borderRadius: '6px' }}>
-              REINICIAR TODO
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={restartMatch} style={{ flex: 1, padding: '15px', cursor: 'pointer', background: '#28a745', color: 'white', border: 'none', fontWeight: 'bold', fontSize: '14px', borderRadius: '6px' }}>
+                VOLVER A JUGAR
+              </button>
+              <button onClick={returnToQr} style={{ flex: 1, padding: '15px', cursor: 'pointer', background: '#ffc107', color: 'black', border: 'none', fontWeight: 'bold', fontSize: '14px', borderRadius: '6px' }}>
+                VOLVER AL QR
+              </button>
+            </div>
           )}
           <p style={{ marginTop: '20px', fontSize: '14px', color: '#ccc' }}>Jugadores Conectados: <strong>{Object.keys(players).length}</strong></p>
         </div>
       )}
 
-      {/* OVERLAY DEL CONTADOR GIGANTE EN EL HOST */}
       {gameStatus === "STARTING" && countdown !== null && (
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: 'white', fontSize: '150px', fontWeight: '900', textShadow: '0px 0px 20px black' }}>
           {countdown}
@@ -270,9 +277,8 @@ function App() {
         </div>
       )}
 
-      {/* RENDERIZADO 3D */}
       <Canvas camera={{ position: [0, 8, -20], fov: 60 }}>
-        <Stats />
+        {/* <Stats /> */}
         <Suspense fallback={null}>  
           <CameraRig players={players} />
           <Sky sunPosition={[100, 20, 100]} turbidity={0.5} />
@@ -323,11 +329,11 @@ function App() {
           {/* Muñeca */}
           <Doll light={lightColor} />
 
-          {/* Renderizado de Jugadores (Nuevos Muñequitos) */}
+          {/* Renderizado de Jugadores */}
           {Object.entries(players).map(([sessionId, player]: [string, any], index: number) => {
             if (!player.isAlive) return null;
             const total = Object.keys(players).length;
-            const xPos = (index - (total - 1) / 2) * 3; // Separación ampliada a 3
+            const xPos = (index - (total - 1) / 2) * 3;
 
             return (
               <group key={sessionId} position={[xPos, 0, player.zPos || 0]}>
@@ -350,7 +356,6 @@ function App() {
         </Suspense>
       </Canvas>
       
-      {/* CSS inyectado para la animación de desvanecimiento del ¡CORRE! */}
       <style>{`
         @keyframes fadeOut {
           0% { opacity: 1; transform: translateX(-50%) scale(1); }

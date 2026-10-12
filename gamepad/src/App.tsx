@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Client, Room } from 'colyseus.js';
 
-const client = new Client(`ws://192.168.1.6:2567`);
+const isLocal = window.location.hostname === "localhost" || window.location.hostname.startsWith("192.168.") || window.location.hostname.startsWith("10.");
+const BACKEND_URL = isLocal 
+  ? `http://${window.location.hostname}:2567` 
+  : "https://tu-futuro-backend.onrender.com"; // CAMBIAR
+
+const WS_URL = BACKEND_URL.replace(/^http/, 'ws');
+const client = new Client(WS_URL);
 
 function App() {
   const [room, setRoom] = useState<Room | null>(null);
@@ -95,11 +101,11 @@ function App() {
 
   useEffect(() => {
     if (lightColor === 'GREEN') {
-      setIsHoldingBreath(false);     // Soltamos el aire a la fuerza
-      setTensionPoint(0);            // Centramos el punto
-      currentDrag.current = 0;       // Reseteamos la fuerza del dedo
-      outCenterTimer.current = 0;    // Reseteamos el castigo
-      setShowWarning(false);         // Ocultamos la advertencia
+      setIsHoldingBreath(false);     
+      setTensionPoint(0);            
+      currentDrag.current = 0;       
+      outCenterTimer.current = 0;    
+      setShowWarning(false);         
     }
   }, [lightColor]);
 
@@ -110,8 +116,7 @@ function App() {
     enterFullScreen();
 
     try {
-      // 1. Saltamos a Vite y hacemos la petición cruda al servidor
-      const response = await fetch(`http://192.168.1.6:2567/matchmake/joinOrCreate/squid_room`, {
+      const response = await fetch(`${BACKEND_URL}/matchmake/joinOrCreate/squid_room`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: playerName, gender: playerGender })
@@ -123,8 +128,6 @@ function App() {
       if (!response.ok) throw new Error("El servidor rechazó la conexión");
       
       let data = await response.json();
-
-      // 2. Le damos a la librería exactamente la estructura que exige para no estallar
       if (!data.room) {
         data = {
           sessionId: data.sessionId,
@@ -136,7 +139,6 @@ function App() {
         };
       }
 
-      // 3. Forzamos la entrada con los datos formateados
       const newRoom = await client.consumeSeatReservation(data);
       setRoom(newRoom);
       
@@ -146,13 +148,10 @@ function App() {
 
         const me = state.players.get(data.sessionId);
         if (me) {
-          // 1. Obligamos a React a acatar si el servidor dice que estamos vivos o muertos
-          setIsAlive(me.isAlive);
-          
+          setIsAlive(me.isAlive);         
           if (!me.isAlive) {
             setGameStatus("ELIMINATED");
           } else if (state.status === "LOBBY") {
-            // 2. Si el servidor reinició la partida (estamos vivos y en LOBBY), limpiamos los tropiezos
             setExpectedLeg('L');
             setIsStumbled(false);
           }
@@ -177,9 +176,8 @@ function App() {
 
   const leaveGame = () => {
     if (room) {
-      room.leave(); // Cierra la conexión del socket
+      room.leave(); 
     }
-    // Purga absoluta de todas las variables locales al volver al formulario
     setRoom(null);
     setGameStatus("LOBBY");
     setIsAlive(true);

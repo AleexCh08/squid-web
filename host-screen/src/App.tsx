@@ -103,6 +103,8 @@ function App() {
   const [lightColor, setLightColor] = useState("RED");
   const [countdown, setCountdown] = useState<number | null>(null);
 
+  const [showTutorial, setShowTutorial] = useState(false);
+
   const isConnecting = useRef(false);
 
   useEffect(() => {
@@ -197,7 +199,60 @@ function App() {
   // ==================== INTERFAZ PRINCIPAL ====================
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', fontFamily: 'sans-serif' }}>
-      
+      {/* BOTÓN DE TUTORIAL FLOTANTE (BRUTALISTA) */}
+      {(gameStatus === "PRE_LOBBY" || gameStatus === "LOBBY") && (
+        <button 
+          onClick={() => setShowTutorial(true)}
+          style={{ position: 'absolute', top: '30px', right: '30px', zIndex: 200, width: '60px', height: '60px', borderRadius: '50%', background: 'black', border: '4px solid #14B8A6', color: '#14B8A6', fontSize: '30px', fontWeight: '900', boxShadow: '6px 6px 0px #0a221f', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' }}
+        >
+          ?
+        </button>
+      )}
+
+      {/* MODAL DE TUTORIAL */}
+      {showTutorial && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 300, backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'black', border: '8px solid #14B8A6', padding: '40px', maxWidth: '800px', width: '90%', boxShadow: '15px 15px 0px #0a221f', position: 'relative' }}>
+            
+            <h2 style={{ color: 'white', fontSize: '40px', fontWeight: '900', margin: '0 0 30px 0', letterSpacing: '8px', textShadow: '4px 4px 0px #14B8A6', textTransform: 'uppercase' }}>
+              Manual de Supervivencia
+            </h2>
+
+            <div style={{ display: 'flex', gap: '30px', marginBottom: '40px' }}>
+              {/* Instrucción 1: LUZ VERDE */}
+              <div style={{ flex: 1, border: '4px solid #14B8A6', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #0a221f' }}>
+                <h3 style={{ color: '#14B8A6', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>1. LUZ VERDE</h3>
+                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>Toca los botones <strong style={{color: 'white'}}>L</strong> y <strong style={{color: 'white'}}>R</strong> alternadamente en tu Gamepad para avanzar. Si repites la misma pierna, tropezarás.</p>
+                <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'center' }}>
+                  <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkL 1s infinite' }}>L</div>
+                  <div style={{ width: '50px', height: '50px', border: '4px solid #14B8A6', color: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '24px', animation: 'blinkR 1s infinite' }}>R</div>
+                </div>
+              </div>
+
+              {/* Instrucción 2: LUZ ROJA */}
+              <div style={{ flex: 1, border: '4px solid #E91E63', padding: '20px', background: '#050505', boxShadow: '8px 8px 0px #220000' }}>
+                <h3 style={{ color: '#E91E63', fontSize: '24px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '2px' }}>2. LUZ ROJA</h3>
+                <p style={{ color: '#aaa', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6' }}>¡DETENTE! Mantén el dedo presionado sobre el sensor y compensa la fuerza para mantener el indicador en el centro.</p>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                  <div style={{ width: '80px', height: '80px', border: '4px solid #E91E63', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'black' }}>
+                    <span style={{color: '#E91E63', fontSize: '8px', fontWeight: '900', marginBottom: '5px'}}>SENSOR</span>
+                    <div style={{ width: '50px', height: '8px', border: '2px solid #555', background: 'black', position: 'relative' }}>
+                       <div style={{ position: 'absolute', width: '6px', height: '100%', background: '#E91E63', animation: 'balance 2s infinite ease-in-out' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowTutorial(false)}
+              style={{ width: '100%', padding: '20px', background: '#14B8A6', color: 'black', border: '4px solid #14B8A6', fontSize: '20px', fontWeight: '900', letterSpacing: '6px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '8px 8px 0px #0a221f', transition: 'all 0.1s' }}
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
       {/* 2. CORTINA DE LOBBY (CÓDIGO QR) */}
       {gameStatus === "PRE_LOBBY" && (
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
@@ -391,6 +446,19 @@ function App() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+          @keyframes blinkL {
+          0%, 49% { background: #14B8A6; color: black; }
+          50%, 100% { background: transparent; color: #14B8A6; }
+        }
+        @keyframes blinkR {
+          0%, 49% { background: transparent; color: #14B8A6; }
+          50%, 100% { background: #14B8A6; color: black; }
+        }
+        @keyframes balance {
+          0% { left: 0%; }
+          50% { left: 85%; }
+          100% { left: 0%; }
         }
       `}</style>
     </div>

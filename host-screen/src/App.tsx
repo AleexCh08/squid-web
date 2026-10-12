@@ -181,9 +181,9 @@ function App() {
   // 1. PANTALLA DE CONEXIÓN
   if (gameStatus === "CONNECTING") {
     return (
-      <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '60px', height: '60px', border: '4px solid #E91E63', marginBottom: '30px', animation: 'spin 2s linear infinite' }}></div>
-        <h2 style={{ color: '#E91E63', fontFamily: 'sans-serif', fontWeight: '900', letterSpacing: '8px', animation: 'pulse 1.5s infinite' }}>
+      <div style={{ width: '100vw', height: '100vh', backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '60px', height: '60px', border: '8px solid #E91E63', marginBottom: '30px', animation: 'spin 2s linear infinite', boxShadow: '8px 8px 0px #220000' }}></div>
+        <h2 style={{ color: '#E91E63', fontFamily: 'sans-serif', fontWeight: '900', letterSpacing: '8px', animation: 'pulse 1.5s infinite', textShadow: '4px 4px 0px #220000' }}>
           SISTEMA INICIANDO
         </h2>
       </div>
@@ -200,27 +200,27 @@ function App() {
       
       {/* 2. CORTINA DE LOBBY (CÓDIGO QR) */}
       {gameStatus === "PRE_LOBBY" && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: '#050505', backgroundImage: 'radial-gradient(circle at center, #1a0005 0%, #050505 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
           
-          <h1 style={{ fontSize: '70px', color: '#E91E63', margin: '0 0 10px 0', letterSpacing: '15px', fontWeight: '900', textShadow: '0 0 30px rgba(233,30,99,0.6)', lineHeight: '1.1' }}>
-            SQUID <span style={{ color: 'white' }}>GAME</span>
+          <h1 style={{ fontSize: '70px', color: '#E91E63', margin: '0 0 10px 0', letterSpacing: '15px', fontWeight: '900', textShadow: '8px 8px 0px #220000', lineHeight: '1.1' }}>
+            SQUID <span style={{ color: 'white', textShadow: '8px 8px 0px #333' }}>GAME</span>
           </h1>
           
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', letterSpacing: '8px', margin: '0 0 15px 0' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '900', color: 'white', letterSpacing: '8px', margin: '0 0 15px 0' }}>
             LUZ <span style={{ color: '#E91E63' }}>ROJA</span> <span style={{ color: '#333', margin: '0 15px' }}>|</span> LUZ <span style={{ color: '#14B8A6' }}>VERDE</span>
           </h2>
 
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '35px', letterSpacing: '8px', fontWeight: 'bold' }}>SISTEMA DE EMPAREJAMIENTO</p>
+          <p style={{ fontSize: '14px', color: '#666', marginBottom: '35px', letterSpacing: '8px', fontWeight: '900' }}>SISTEMA DE EMPAREJAMIENTO</p>
           
-          <div style={{ background: 'white', padding: '15px', border: '4px solid #E91E63', marginBottom: '25px', boxShadow: '0 0 50px rgba(233, 30, 99, 0.4)' }}>
+          <div style={{ background: 'white', padding: '15px', border: '8px solid #E91E63', marginBottom: '25px', boxShadow: '12px 12px 0px #220000' }}>
             <QRCodeCanvas value={gamepadUrl} size={220} level={"H"} />
           </div>
 
-          <h2 style={{ color: '#14B8A6', marginBottom: '15px', letterSpacing: '4px', fontSize: '14px', fontWeight: 'bold' }}>SUJETOS DETECTADOS: <span style={{fontSize: '20px'}}>{playerCount}</span></h2>
+          <h2 style={{ color: '#14B8A6', marginBottom: '15px', letterSpacing: '4px', fontSize: '14px', fontWeight: '900' }}>SUJETOS DETECTADOS: <span style={{fontSize: '20px'}}>{playerCount}</span></h2>
           
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '800px', marginBottom: '40px', minHeight: '50px' }}>
             {Object.values(players).map((p: any, i) => (
-              <span key={i} style={{ background: '#111', border: '1px solid #E91E63', padding: '8px 16px', color: '#E91E63', fontWeight: '900', letterSpacing: '2px', boxShadow: '0 0 10px rgba(233,30,99,0.2)', fontSize: '14px' }}>
+              <span key={i} style={{ background: 'black', border: '4px solid #E91E63', padding: '8px 16px', color: '#E91E63', fontWeight: '900', letterSpacing: '2px', boxShadow: '4px 4px 0px #220000', fontSize: '14px' }}>
                 #{p.name}
               </span>
             ))}
@@ -232,11 +232,11 @@ function App() {
             style={{ 
               padding: '15px 60px', fontSize: '18px', fontWeight: '900', letterSpacing: '6px',
               cursor: playerCount === 0 ? 'not-allowed' : 'pointer', 
-              background: playerCount === 0 ? '#111' : '#E91E63', 
-              color: playerCount === 0 ? '#444' : 'white', 
-              border: playerCount === 0 ? '2px solid #222' : '2px solid #E91E63', 
-              boxShadow: playerCount === 0 ? 'none' : '0 0 30px rgba(233,30,99,0.6)',
-              transition: 'all 0.3s', textTransform: 'uppercase'
+              background: playerCount === 0 ? 'transparent' : '#E91E63', 
+              color: playerCount === 0 ? '#444' : 'black', 
+              border: playerCount === 0 ? '4px solid #222' : '4px solid #E91E63', 
+              boxShadow: playerCount === 0 ? 'none' : '8px 8px 0px #220000',
+              transition: 'all 0.1s', textTransform: 'uppercase'
             }}
           >
             Aperturar Puertas
@@ -246,44 +246,44 @@ function App() {
       
       {/* 3. PANEL DE CONTROL COMPACTO (MAESTRO) */}
       {isPanelVisible && (
-        <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, background: 'rgba(5,5,5,0.95)', padding: '20px', color: 'white', border: '2px solid #E91E63', boxShadow: '0 0 30px rgba(233,30,99,0.3)', width: 'auto', minWidth: '260px' }}>
+        <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, background: 'black', padding: '20px', color: 'white', border: '4px solid #E91E63', boxShadow: '8px 8px 0px #220000', width: 'auto', minWidth: '260px' }}>
           
           <h2 style={{ margin: '0 0 5px 0', color: '#E91E63', fontSize: '18px', letterSpacing: '3px', fontWeight: '900' }}>PANEL DE CONTROL</h2>
-          <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '9px', letterSpacing: '2px' }}>ACCESO RESTRINGIDO - FRONTMAN</p>
+          <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '9px', letterSpacing: '2px', fontWeight: 'bold' }}>ACCESO RESTRINGIDO - FRONTMAN</p>
 
           {gameStatus === "GAME_OVER" && (
-            <div style={{ borderLeft: `3px solid ${hasWinner ? '#14B8A6' : '#E91E63'}`, paddingLeft: '10px', marginBottom: '20px' }}>
-              <h3 style={{ color: hasWinner ? '#14B8A6' : '#E91E63', margin: 0, fontSize: '13px', letterSpacing: '1px' }}>
+            <div style={{ borderLeft: `6px solid ${hasWinner ? '#14B8A6' : '#E91E63'}`, paddingLeft: '10px', marginBottom: '20px' }}>
+              <h3 style={{ color: hasWinner ? '#14B8A6' : '#E91E63', margin: 0, fontSize: '13px', letterSpacing: '1px', fontWeight: '900' }}>
                 {hasWinner ? "NIVEL COMPLETADO" : "ELIMINACIÓN TOTAL"}
               </h3>
             </div>
           )}
           
           {gameStatus === "LOBBY" ? (
-            <button onClick={startGame} style={{ padding: '12px 20px', width: '100%', cursor: 'pointer', background: '#E91E63', color: 'white', border: 'none', fontWeight: '900', letterSpacing: '2px', fontSize: '14px', textTransform: 'uppercase', boxShadow: '0 0 15px rgba(233,30,99,0.4)' }}>
+            <button onClick={startGame} style={{ padding: '12px 20px', width: '100%', cursor: 'pointer', background: '#E91E63', color: 'black', border: '4px solid #E91E63', fontWeight: '900', letterSpacing: '2px', fontSize: '14px', textTransform: 'uppercase', boxShadow: '6px 6px 0px #220000' }}>
               INICIAR JUEGO
             </button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button onClick={restartMatch} style={{ padding: '10px 15px', cursor: 'pointer', background: 'transparent', color: '#14B8A6', border: '2px solid #14B8A6', fontWeight: 'bold', letterSpacing: '1px', fontSize: '11px', textTransform: 'uppercase', transition: 'all 0.2s' }}>
+              <button onClick={restartMatch} style={{ padding: '10px 15px', cursor: 'pointer', background: 'transparent', color: '#14B8A6', border: '4px solid #14B8A6', fontWeight: '900', letterSpacing: '1px', fontSize: '11px', textTransform: 'uppercase', transition: 'all 0.1s', boxShadow: '4px 4px 0px #0a221f' }}>
                 NUEVA RONDA
               </button>
-              <button onClick={returnToQr} style={{ padding: '10px 15px', cursor: 'pointer', background: 'transparent', color: '#E91E63', border: '2px solid #E91E63', fontWeight: 'bold', letterSpacing: '1px', fontSize: '11px', textTransform: 'uppercase', transition: 'all 0.2s' }}>
+              <button onClick={returnToQr} style={{ padding: '10px 15px', cursor: 'pointer', background: 'transparent', color: '#E91E63', border: '4px solid #E91E63', fontWeight: '900', letterSpacing: '1px', fontSize: '11px', textTransform: 'uppercase', transition: 'all 0.1s', boxShadow: '4px 4px 0px #220000' }}>
                 VOLVER AL LOBBY
               </button>
             </div>
           )}
 
-          <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', color: '#888', letterSpacing: '1px', fontWeight: 'bold' }}>SUJETOS ACTIVOS:</span>
-            <span style={{ fontSize: '20px', color: '#14B8A6', fontWeight: '900' }}>{Object.keys(players).length}</span>
+          <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '4px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', color: '#888', letterSpacing: '1px', fontWeight: '900' }}>SUJETOS ACTIVOS:</span>
+            <span style={{ fontSize: '20px', color: '#14B8A6', fontWeight: '900', textShadow: '2px 2px 0px #0a221f' }}>{Object.keys(players).length}</span>
           </div>
         </div>
       )}
 
       {/* 4. OVERLAYS DE ACCIÓN A PRUEBA DE COLISIONES */}
       {gameStatus === "STARTING" && countdown !== null && (
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#E91E63', fontSize: '200px', fontWeight: '900', textShadow: '0 0 50px rgba(233,30,99,0.8)', animation: 'pulse 1s infinite' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#E91E63', fontSize: '200px', fontWeight: '900', textShadow: '15px 15px 0px #220000', animation: 'pulse 1s infinite' }}>
           {countdown}
         </div>
       )}
@@ -292,12 +292,12 @@ function App() {
       {gameStatus === "PLAYING" && countdown === null && (
         <>
           {lightColor === "GREEN" && (
-            <div key="green" style={{ position: 'absolute', top: '35%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#14B8A6', fontSize: '100px', fontWeight: '900', letterSpacing: '10px', textShadow: '0 0 40px rgba(20,184,166,0.8)', whiteSpace: 'nowrap', animation: 'fadeOut 2s forwards' }}>
+            <div key="green" style={{ position: 'absolute', top: '35%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#14B8A6', fontSize: '100px', fontWeight: '900', letterSpacing: '10px', textShadow: '10px 10px 0px #0a221f', whiteSpace: 'nowrap', animation: 'fadeOut 2s forwards' }}>
               LUZ VERDE
             </div>
           )}
           {lightColor === "RED" && (
-            <div key="red" style={{ position: 'absolute', top: '35%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#E91E63', fontSize: '100px', fontWeight: '900', letterSpacing: '10px', textShadow: '0 0 40px rgba(233,30,99,0.8)', whiteSpace: 'nowrap', animation: 'fadeOut 2s forwards' }}>
+            <div key="red" style={{ position: 'absolute', top: '35%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 20, color: '#E91E63', fontSize: '100px', fontWeight: '900', letterSpacing: '10px', textShadow: '10px 10px 0px #220000', whiteSpace: 'nowrap', animation: 'fadeOut 2s forwards' }}>
               LUZ ROJA
             </div>
           )}
@@ -306,11 +306,11 @@ function App() {
       
       {gameStatus === "GAME_OVER" && winner && (
         <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, textAlign: 'center', animation: 'winnerPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', whiteSpace: 'nowrap' }}>
-          <h1 style={{ fontSize: '80px', margin: 0, color: '#14B8A6', textShadow: '0 0 40px rgba(20,184,166,0.6)', fontWeight: '900', letterSpacing: '15px' }}>
+          <h1 style={{ fontSize: '80px', margin: 0, color: '#14B8A6', textShadow: '10px 10px 0px #0a221f', fontWeight: '900', letterSpacing: '15px' }}>
             ¡GANADOR!
           </h1>
-          <div style={{ display: 'inline-block', marginTop: '20px', border: '4px solid #14B8A6', padding: '15px 50px', backgroundColor: 'rgba(5,5,5,0.8)' }}>
-            <h2 style={{ fontSize: '40px', margin: 0, color: 'white', letterSpacing: '8px', fontWeight: '900' }}>
+          <div style={{ display: 'inline-block', marginTop: '20px', border: '8px solid #14B8A6', padding: '15px 50px', backgroundColor: 'black', boxShadow: '15px 15px 0px #0a221f' }}>
+            <h2 style={{ fontSize: '40px', margin: 0, color: 'white', letterSpacing: '8px', fontWeight: '900', textShadow: '4px 4px 0px #333' }}>
               JUGADOR #{winner.name}
             </h2>
           </div>

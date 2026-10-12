@@ -18,7 +18,7 @@ export class GameState extends Schema {
 }
 
 export class SquidRoom extends Room {
-  private distancePerStep = 0.2; 
+  private distancePerStep = 0.25; 
   private lightTimeout?: NodeJS.Timeout;
   private readonly FINISH_LINE_Z = 100;
 

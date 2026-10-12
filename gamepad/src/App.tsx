@@ -350,21 +350,20 @@ function App() {
   // ================= PANTALLA DE VICTORIA =================
   if (isAlive && gameStatus === "GAME_OVER") {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-center relative overflow-hidden">
-        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-[#14B8A6]/20 to-transparent opacity-50"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-black p-6 text-center relative overflow-hidden">
         
-        <div className="w-24 h-24 mb-8 relative flex items-center justify-center shadow-[0_0_30px_rgba(20,184,166,0.3)] z-10 border-[6px] border-[#14B8A6] rounded-sm transform rotate-45">
-          <div className="w-full h-full border-4 border-black bg-transparent"></div>
+        <div className="w-24 h-24 border-8 border-[#14B8A6] mb-8 relative flex items-center justify-center shadow-[8px_8px_0px_#14B8A6] z-10 bg-transparent transform rotate-45">
+          <div className="w-full h-full border-8 border-black bg-transparent"></div>
         </div>
 
-        <h1 className="text-6xl font-black text-white mb-2 drop-shadow-[0_0_20px_rgba(20,184,166,0.8)] relative z-10 tracking-widest">
+        <h1 className="text-6xl font-black text-white mb-2 relative z-10 tracking-widest drop-shadow-[6px_6px_0px_#14B8A6]">
           GANASTE
         </h1>
-        <p className="text-[#14B8A6] text-sm font-bold mb-10 tracking-[0.3em] relative z-10">
+        <p className="text-[#14B8A6] text-sm font-black mb-10 tracking-[0.3em] relative z-10 drop-shadow-[2px_2px_0px_#0a221f]">
           NIVEL COMPLETADO
         </p>
 
-        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-2 border-[#14B8A6] text-[#14B8A6] font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#14B8A6] hover:text-black transition-all relative z-10">
+        <button onClick={leaveGame} className="px-8 py-4 bg-transparent border-4 border-[#14B8A6] text-[#14B8A6] font-black text-xs tracking-[0.2em] uppercase transition-all relative z-10 shadow-[6px_6px_0px_#14B8A6] hover:shadow-[0px_0px_0px_#14B8A6] hover:translate-y-1 hover:translate-x-1 hover:bg-[#14B8A6] hover:text-black">
           Volver al Inicio
         </button>
       </div>

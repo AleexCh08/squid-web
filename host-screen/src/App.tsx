@@ -292,7 +292,7 @@ function App() {
       {gameStatus === "GAME_OVER" && winner && (
         <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 30, textAlign: 'center', animation: 'winnerPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', whiteSpace: 'nowrap' }}>
           <h1 style={{ fontSize: '80px', margin: 0, color: '#14B8A6', textShadow: '0 0 40px rgba(20,184,166,0.6)', fontWeight: '900', letterSpacing: '15px' }}>
-            SUPERVIVIENTE
+            ¡GANADOR!
           </h1>
           <div style={{ display: 'inline-block', marginTop: '20px', border: '4px solid #14B8A6', padding: '15px 50px', backgroundColor: 'rgba(5,5,5,0.8)' }}>
             <h2 style={{ fontSize: '40px', margin: 0, color: 'white', letterSpacing: '8px', fontWeight: '900' }}>

@@ -114,10 +114,12 @@ function App() {
   }, [lightColor, isHoldingBreath, gameStatus, room]);
 
   const enterFullScreen = () => {
-    const doc = document.documentElement as any;
-    if (doc.requestFullscreen) doc.requestFullscreen();
-    else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen(); 
-    else if (doc.msRequestFullscreen) doc.msRequestFullscreen(); 
+    if (!document.fullscreenElement) {
+      const doc = document.documentElement as any;
+      if (doc.requestFullscreen) doc.requestFullscreen().catch(() => {});
+      else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen(); 
+      else if (doc.msRequestFullscreen) doc.msRequestFullscreen(); 
+    }
   };
 
   useEffect(() => {
@@ -371,7 +373,7 @@ function App() {
         <p className="text-[#666] tracking-widest text-xs">REQUISITO OBLIGATORIO PARA JUGAR</p>
       </div>
 
-      <div id="game-ui" className="flex flex-col h-screen bg-[#050505] relative overflow-hidden font-sans select-none">
+      <div id="game-ui" onPointerDown={enterFullScreen} className="flex flex-col h-screen bg-[#050505] relative overflow-hidden font-sans select-none">
         
         {/* Viñeta indicadora de luz */}
         <div className={`absolute inset-0 pointer-events-none transition-all duration-300 z-0 ${

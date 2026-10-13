@@ -258,7 +258,7 @@ function App() {
   if (!room) {
     const isValidPlayer = playerName.trim().length > 0;
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-white font-sans relative overflow-hidden">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] p-6 text-white font-sans overflow-hidden m-0">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none flex flex-col justify-between">
           <div className="w-full h-1 bg-[#E91E63]"></div>
           <div className="w-full h-1 bg-[#E91E63]"></div>
@@ -340,7 +340,7 @@ function App() {
   // ================= PANTALLA DE ELIMINADO =================
   if (gameStatus === "ELIMINATED" || !isAlive) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-black p-6 text-center relative overflow-hidden">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black p-6 text-center overflow-hidden m-0">
         
         <div className="w-24 h-24 border-8 border-[#E91E63] mb-8 relative flex items-center justify-center shadow-[8px_8px_0px_#E91E63] z-10 bg-transparent rounded-full">
           <div className="w-20 h-2 bg-[#E91E63] absolute transform -rotate-45"></div>
@@ -360,7 +360,7 @@ function App() {
   // ================= PANTALLA DE VICTORIA =================
   if (isAlive && gameStatus === "GAME_OVER") {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-black p-6 text-center relative overflow-hidden">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black p-6 text-center overflow-hidden m-0">
         
         <div className="w-24 h-24 border-8 border-[#14B8A6] mb-8 relative flex items-center justify-center shadow-[8px_8px_0px_#14B8A6] z-10 bg-transparent transform rotate-45">
           <div className="w-full h-full border-8 border-black bg-transparent"></div>
@@ -383,7 +383,7 @@ function App() {
   // ================= PANTALLA DE DESCONEXIÓN =================
   if (gameStatus === "DISCONNECTED") {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-center relative overflow-hidden font-sans">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] p-6 text-center overflow-hidden font-sans m-0">
         
         <div className="w-24 h-24 border-8 border-[#E91E63] mb-8 relative flex items-center justify-center shadow-[8px_8px_0px_#220000] z-10 bg-transparent rounded-full animate-pulse">
           <div className="w-20 h-2 bg-[#E91E63] absolute transform -rotate-45"></div>
@@ -408,13 +408,13 @@ function App() {
   // ================= GAMEPAD UI =================
   return (
     <>
-      <div id="portrait-warning" className="fixed inset-0 bg-[#050505] z-50 flex-col items-center justify-center p-6 text-center">
+      <div id="portrait-warning" className="fixed inset-0 bg-[#050505] z-50 flex-col items-center justify-center p-6 text-center m-0">
         <div className="w-24 h-24 border-[6px] border-[#E91E63] rounded-sm mb-6 animate-[spin_3s_ease-in-out_infinite] shadow-[0_0_20px_rgba(233,30,99,0.5)]"></div>
         <h2 className="text-2xl font-black text-white mb-2 tracking-widest">GIRA EL DISPOSITIVO</h2>
         <p className="text-[#666] tracking-widest text-xs">REQUISITO OBLIGATORIO PARA JUGAR</p>
       </div>
 
-      <div id="game-ui" onPointerDown={enterFullScreen} className="flex flex-col h-screen bg-[#050505] relative overflow-hidden font-sans select-none">
+      <div id="game-ui" onPointerDown={enterFullScreen} className="absolute inset-0 flex flex-col bg-[#050505] overflow-hidden font-sans select-none m-0">
         <div className={`absolute inset-0 pointer-events-none transition-all duration-300 z-0 ${
           lightColor === 'GREEN' ? 'shadow-[inset_0_0_80px_rgba(20,184,166,0.15)]' : 
           lightColor === 'RED' ? 'shadow-[inset_0_0_120px_rgba(233,30,99,0.2)]' : ''
@@ -443,6 +443,18 @@ function App() {
           </div>
           )}
         </div>
+
+        {(gameStatus === 'PRE_LOBBY' || gameStatus === 'LOBBY') && (
+          <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-12 h-12 border-4 border-t-transparent border-[#14B8A6] rounded-full animate-spin mb-6"></div>
+            <h2 className="text-xl md:text-2xl font-black text-[#14B8A6] tracking-[0.2em] mb-2 animate-pulse drop-shadow-[0_0_10px_rgba(20,184,166,0.3)]">
+              ESPERANDO
+            </h2>
+            <p className="text-[#666] tracking-[0.2em] text-[10px] md:text-xs max-w-50 uppercase font-bold">
+              El juego iniciará pronto.
+            </p>
+          </div>
+        )}
 
         <div className="flex-1 flex w-full relative z-10">
           <div 

@@ -21,11 +21,23 @@ function Doll({ light }: { light: string }) {
     <group position={[0, 0, 110]} castShadow>
       <mesh position={[6, 5, 0]} castShadow receiveShadow><cylinderGeometry args={[0.5, 0.8, 10]} /><meshStandardMaterial color="#4E342E" /></mesh>
       <mesh position={[6, 12, 0]} castShadow receiveShadow><sphereGeometry args={[4]} /><meshStandardMaterial color="#2E7D32" /></mesh>
-      <mesh position={[0, 4, 0]} castShadow receiveShadow><cylinderGeometry args={[1, 2, 8]} /><meshStandardMaterial color="#FF9800" /></mesh>
+      
+      <mesh position={[0, 2.5, 0]} castShadow receiveShadow><cylinderGeometry args={[0.8, 2.5, 5]} /><meshStandardMaterial color="#FF9800" /></mesh>
+      <mesh position={[0, 6.5, 0]} castShadow receiveShadow><cylinderGeometry args={[0.7, 0.9, 3]} /><meshStandardMaterial color="#FFEB3B" /></mesh>
+      
+      <mesh position={[-1.2, 6, 0]} rotation={[0, 0, Math.PI / 6]} castShadow><cylinderGeometry args={[0.2, 0.2, 3]} /><meshStandardMaterial color="#FFEB3B" /></mesh>
+      <mesh position={[1.2, 6, 0]} rotation={[0, 0, -Math.PI / 6]} castShadow><cylinderGeometry args={[0.2, 0.2, 3]} /><meshStandardMaterial color="#FFEB3B" /></mesh>
+
       <group ref={headRef} position={[0, 9, 0]}>
         <mesh castShadow receiveShadow><sphereGeometry args={[1.5]} /><meshStandardMaterial color="#FFCCBC" /></mesh>
+        <mesh position={[0, 0.2, -0.2]} scale={[1.05, 0.95, 1.05]}><sphereGeometry args={[1.5]} /><meshStandardMaterial color="#212121" /></mesh>
+        
         <mesh position={[-0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshStandardMaterial color="#111" /></mesh>
         <mesh position={[0.5, 0.2, 1.4]}><sphereGeometry args={[0.2]} /><meshStandardMaterial color="#111" /></mesh>
+        <mesh position={[0, -0.4, 1.45]}><boxGeometry args={[0.3, 0.1, 0.1]} /><meshStandardMaterial color="#8a0303" /></mesh>
+
+        <mesh position={[-1.6, -0.5, 0]} rotation={[0, 0, Math.PI / 4]} castShadow><cylinderGeometry args={[0.1, 0.3, 1.5]} /><meshStandardMaterial color="#212121" /></mesh>
+        <mesh position={[1.6, -0.5, 0]} rotation={[0, 0, -Math.PI / 4]} castShadow><cylinderGeometry args={[0.1, 0.3, 1.5]} /><meshStandardMaterial color="#212121" /></mesh>
       </group>
     </group>
   );
@@ -84,6 +96,28 @@ function CameraRig({ players }: { players: any }) {
     }
   });
   return null;
+}
+
+function Guard({ position, symbol }: { position: [number, number, number], symbol: 'circle' | 'square' | 'triangle' }) {
+  return (
+    <group position={position} castShadow receiveShadow>
+      <mesh position={[0, 1, 0]} castShadow receiveShadow><boxGeometry args={[1.8, 2, 1.8]} /><meshStandardMaterial color="#E91E63" roughness={0.8} /></mesh>
+      <mesh position={[0, 2, 0]} castShadow receiveShadow><boxGeometry args={[2.1, 0.3, 2.1]} /><meshStandardMaterial color="#111" roughness={0.5} /></mesh>
+      <mesh position={[0, 3, 0]} castShadow receiveShadow><boxGeometry args={[2, 2, 2]} /><meshStandardMaterial color="#E91E63" roughness={0.8} /></mesh>
+      <mesh position={[0, 4.8, 0]} castShadow receiveShadow><boxGeometry args={[1.5, 1.6, 1.5]} /><meshStandardMaterial color="#E91E63" roughness={0.9} /></mesh>
+      <mesh position={[0, 4.8, -0.78]}><planeGeometry args={[1.3, 1.4]} /><meshBasicMaterial color="#111" /></mesh>
+      
+      {symbol === 'circle' && <mesh position={[0, 4.8, -0.80]}><torusGeometry args={[0.25, 0.05, 16, 32]} /><meshBasicMaterial color="black" /></mesh>}
+      {symbol === 'square' && <mesh position={[0, 4.8, -0.80]} rotation={[0, 0, Math.PI / 4]}><torusGeometry args={[0.3, 0.05, 4, 4]} /><meshBasicMaterial color="black" /></mesh>}
+      {symbol === 'triangle' && <mesh position={[0, 4.8, -0.80]} rotation={[0, 0, Math.PI / 6]}><torusGeometry args={[0.3, 0.05, 3, 3]} /><meshBasicMaterial color="black" /></mesh>}
+      
+      <group position={[0, 3, -1.1]} rotation={[0, 0, Math.PI / 2.2]}>
+        <mesh castShadow><cylinderGeometry args={[0.08, 0.1, 2.5]} /><meshStandardMaterial color="#222" /></mesh>
+        <mesh position={[0.2, -0.2, 0]} castShadow><boxGeometry args={[0.4, 0.15, 0.3]} /><meshStandardMaterial color="#111" /></mesh>
+        <mesh position={[-1.1, 0.1, 0]} castShadow><boxGeometry args={[0.2, 0.4, 0.15]} /><meshStandardMaterial color="#111" /></mesh>
+      </group>
+    </group>
+  );
 }
 
 // ==================== LÓGICA DE RED ====================
@@ -565,6 +599,40 @@ function App() {
             <span style={{ fontSize: '10px', color: '#888', letterSpacing: '1px', fontWeight: '900' }}>SUJETOS ACTIVOS:</span>
             <span style={{ fontSize: '20px', color: '#14B8A6', fontWeight: '900', textShadow: '2px 2px 0px #0a221f' }}>{Object.keys(players).length}</span>
           </div>
+
+          {/* ================= NUEVO LEADERBOARD POST-PARTIDA ================= */}
+          {gameStatus === "GAME_OVER" && (
+            <div style={{ marginTop: '20px', borderTop: '4px solid #E91E63', paddingTop: '15px' }}>
+              <h3 style={{ margin: '0 0 10px 0', color: 'white', fontSize: '12px', letterSpacing: '3px', textAlign: 'center', textTransform: 'uppercase' }}>
+                Clasificación Final
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', maxHeight: '150px', overflowY: 'auto' }}>
+                {Object.values(players)
+                  // Ordenamos: Los vivos (ganadores) arriba, luego por la mayor distancia (zPos)
+                  .sort((a: any, b: any) => {
+                    if (a.isAlive && !b.isAlive) return -1;
+                    if (!a.isAlive && b.isAlive) return 1;
+                    return (b.zPos || 0) - (a.zPos || 0);
+                  })
+                  .map((p: any, idx: number) => (
+                    <div key={idx} style={{ 
+                      display: 'flex', justifyContent: 'space-between', padding: '5px 10px', 
+                      background: p.isAlive ? '#14B8A6' : '#220000', 
+                      color: p.isAlive ? 'black' : '#E91E63',
+                      borderLeft: `4px solid ${p.isAlive ? 'white' : '#E91E63'}`
+                    }}>
+                      <span style={{ fontWeight: '900', fontSize: '11px' }}>
+                        {idx + 1}. #{p.name}
+                      </span>
+                      <span style={{ fontSize: '10px', fontWeight: 'bold' }}>
+                        {p.isAlive ? 'SOBREVIVE' : Math.floor(p.zPos || 0) + 'm'}
+                      </span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -630,31 +698,36 @@ function App() {
 
           <DaylightArena />
 
-          <group position={[-8, 2, 105]} castShadow receiveShadow>
-            <mesh castShadow receiveShadow><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" roughness={0.7} /></mesh>
-            <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
-            <mesh position={[0, 1, -1.02]}><torusGeometry args={[0.3, 0.06, 16, 32]} /><meshBasicMaterial color="black" /></mesh>
-          </group>
-          <group position={[8, 2, 105]} castShadow receiveShadow>
-            <mesh castShadow receiveShadow><boxGeometry args={[2, 4, 2]} /><meshStandardMaterial color="#E91E63" roughness={0.7} /></mesh>
-            <mesh position={[0, 1, -1.01]}><planeGeometry args={[1.5, 1.5]} /><meshBasicMaterial color="#111" /></mesh>
-            <mesh position={[0, 1, -1.02]} rotation={[0, 0, Math.PI / 4]}><torusGeometry args={[0.35, 0.06, 4, 4]} /><meshBasicMaterial color="black" /></mesh>
-          </group>
+          <Guard position={[-8, 0, 105]} symbol="circle" />
+          <Guard position={[8, 0, 105]} symbol="square" />
 
           <Doll light={lightColor} />
 
           {/* Jugadores */}
           {Object.entries(players).map(([sessionId, player]: [string, any], index: number) => {
-            if (!player.isAlive) return null;
             const total = Object.keys(players).length;
             const xPos = (index - (total - 1) / 2) * 3;
+            
+            const targetRotationX = player.isAlive ? 0 : -Math.PI / 2;
+            const targetYPos = player.isAlive ? 0 : 0.5; 
 
             return (
-              <group key={sessionId} position={[xPos, 0, player.zPos || 0]}>
-                {player.gender === 'F' ? <PlayerFemale /> : <PlayerMale />}
-                <Text position={[0, 2.8, 0]} rotation={[0, Math.PI, 0]} fontSize={0.5} color="white" outlineWidth={0.05} outlineColor="black" fontWeight="bold">
-                  {player.name}
-                </Text>
+              <group key={sessionId} position={[xPos, targetYPos, player.zPos || 0]}>
+                <group rotation={[targetRotationX, 0, 0]}>
+                  {player.gender === 'F' ? <PlayerFemale /> : <PlayerMale />}
+                  {player.isAlive && (
+                    <Text position={[0, 2.8, 0]} rotation={[0, Math.PI, 0]} fontSize={0.5} color="white" outlineWidth={0.05} outlineColor="black" fontWeight="bold">
+                      {player.name}
+                    </Text>
+                  )}
+                </group>
+
+                {!player.isAlive && (
+                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.45, -1]}>
+                    <circleGeometry args={[1.5, 32]} />
+                    <meshBasicMaterial color="#8a0303" transparent opacity={0.8} />
+                  </mesh>
+                )}
               </group>
             );
           })}

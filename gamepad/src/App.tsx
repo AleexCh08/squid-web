@@ -113,12 +113,28 @@ function App() {
     return () => clearInterval(interval);
   }, [lightColor, isHoldingBreath, gameStatus, room]);
 
-  const enterFullScreen = () => {
+  const wakeLockRef = useRef<any>(null);
+  const enterFullScreen = async () => {
     if (!document.fullscreenElement) {
       const doc = document.documentElement as any;
       if (doc.requestFullscreen) doc.requestFullscreen().catch(() => {});
       else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen(); 
       else if (doc.msRequestFullscreen) doc.msRequestFullscreen(); 
+    }
+
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        console.log('Wake Lock activado: Pantalla encendida permanente.');
+        
+        document.addEventListener('visibilitychange', async () => {
+          if (wakeLockRef.current !== null && document.visibilityState === 'visible') {
+            wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+          }
+        });
+      }
+    } catch (err) {
+      console.error(`Wake Lock error: ${err}`);
     }
   };
 

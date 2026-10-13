@@ -18,6 +18,10 @@ function App() {
   const [gameStatus, setGameStatus] = useState('LOBBY'); 
   const [lightColor, setLightColor] = useState('RED');
 
+  const isTestMode = lightColor === 'TEST_GREEN' || lightColor === 'TEST_RED';
+  const activeLight = isTestMode ? lightColor.replace('TEST_', '') : lightColor;
+  const isActionPhase = gameStatus === 'PLAYING' || isTestMode;
+
   const [expectedLeg, setExpectedLeg] = useState<'L' | 'R'>('L');
   const [isStumbled, setIsStumbled] = useState(false); 
   
@@ -55,20 +59,22 @@ function App() {
   useEffect(() => {
     let reactionTimeout: number;
 
-    if (lightColor === 'RED' && isAlive && !isHoldingBreath && gameStatus === 'PLAYING') {
+    if (activeLight === 'RED' && isAlive && !isHoldingBreath && isActionPhase) {
       reactionTimeout = window.setTimeout(() => {
-        setIsAlive(false); 
-        room?.send("PLAYER_DIED");
+        if (!isTestMode) {
+          setIsAlive(false); 
+          room?.send("PLAYER_DIED");
+        }
       }, 1000);
     }
 
     return () => clearTimeout(reactionTimeout);
-  }, [lightColor, isHoldingBreath, isAlive, gameStatus, room]);
+  }, [activeLight, isHoldingBreath, isAlive, isActionPhase, isTestMode, room]);
 
   useEffect(() => {
     let interval: number;
  
-    if (lightColor === 'RED' && isHoldingBreath && gameStatus === 'PLAYING') {
+    if (activeLight === 'RED' && isHoldingBreath && isActionPhase) {
       interval = window.setInterval(() => {
         setTensionPoint((prev) => {
           const randomJitter = (Math.random() - 0.5) * 15; 
@@ -76,8 +82,7 @@ function App() {
           const nextPoint = prev + randomJitter - playerForce;
 
           if (nextPoint > 100 || nextPoint < -100) {
-            setIsAlive(false); 
-            room?.send("PLAYER_DIED");
+            if (!isTestMode) { setIsAlive(false); room?.send("PLAYER_DIED"); }
             return nextPoint;
           }
 
@@ -86,8 +91,7 @@ function App() {
           if (isOut) {
             outCenterTimer.current += 50; 
             if (outCenterTimer.current >= 3000) {
-              setIsAlive(false);
-              room?.send("PLAYER_DIED");
+              if (!isTestMode) { setIsAlive(false); room?.send("PLAYER_DIED"); }
               return nextPoint;
             }
           } else {
@@ -111,7 +115,7 @@ function App() {
     }
 
     return () => clearInterval(interval);
-  }, [lightColor, isHoldingBreath, gameStatus, room]);
+  }, [activeLight, isHoldingBreath, isActionPhase, isTestMode, room]);
 
   const wakeLockRef = useRef<any>(null);
   const enterFullScreen = async () => {
@@ -139,14 +143,14 @@ function App() {
   };
 
   useEffect(() => {
-    if (lightColor === 'GREEN') {
+    if (activeLight === 'GREEN') {
       setIsHoldingBreath(false);     
       setTensionPoint(0);            
       currentDrag.current = 0;       
       outCenterTimer.current = 0;    
       setShowWarning(false);         
     }
-  }, [lightColor]);
+  }, [activeLight]);
 
   const joinGame = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,17 +217,16 @@ function App() {
   };
 
   const handleStep = (leg: 'L' | 'R') => {
-    if (!isAlive || isStumbled || gameStatus !== 'PLAYING') return;
+    if (!isAlive || isStumbled || !isActionPhase) return;
 
-    if (lightColor === 'RED') {
-      setIsAlive(false);
-      room?.send("PLAYER_DIED"); 
+    if (activeLight === 'RED') {
+      if (!isTestMode) { setIsAlive(false); room?.send("PLAYER_DIED"); }
       return; 
     }
 
     if (leg === expectedLeg) {
       setExpectedLeg(leg === 'L' ? 'R' : 'L');
-      room?.send("STEP"); 
+      if (!isTestMode) room?.send("STEP"); 
     } else {
       setIsStumbled(true);
       setTimeout(() => setIsStumbled(false), 1000);
@@ -231,7 +234,7 @@ function App() {
   };
 
   const handleHoldStart = (e: React.PointerEvent) => {
-    if (lightColor === 'RED' && gameStatus === 'PLAYING') {
+    if (activeLight === 'RED' && isActionPhase) {
       setIsHoldingBreath(true);
       touchStartX.current = e.clientX;
       currentDrag.current = 0;
@@ -248,9 +251,8 @@ function App() {
     setIsHoldingBreath(false);
     currentDrag.current = 0;
     outCenterTimer.current = 0;
-    if (lightColor === 'RED' && gameStatus === 'PLAYING') {
-      setIsAlive(false); 
-      room?.send("PLAYER_DIED");
+    if (activeLight === 'RED' && isActionPhase) {
+      if (!isTestMode) { setIsAlive(false); room?.send("PLAYER_DIED"); }
     }
   };
 
@@ -416,21 +418,21 @@ function App() {
 
       <div id="game-ui" onPointerDown={enterFullScreen} className="absolute inset-0 flex flex-col bg-[#050505] overflow-hidden font-sans select-none m-0">
         <div className={`absolute inset-0 pointer-events-none transition-all duration-300 z-0 ${
-          lightColor === 'GREEN' ? 'shadow-[inset_0_0_80px_rgba(20,184,166,0.15)]' : 
-          lightColor === 'RED' ? 'shadow-[inset_0_0_120px_rgba(233,30,99,0.2)]' : ''
+          activeLight === 'GREEN' ? 'shadow-[inset_0_0_80px_rgba(20,184,166,0.15)]' : 
+          activeLight === 'RED' ? 'shadow-[inset_0_0_120px_rgba(233,30,99,0.2)]' : ''
         }`}></div>
 
         <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center border-b border-[#222] bg-[#0a0a0a]/90 z-20 pointer-events-none shadow-[0_5px_20px_rgba(0,0,0,0.8)]">
           <span className="font-black text-[#E91E63] ml-4 tracking-[0.2em] text-lg">#{playerName}</span>
           
           <span className={`text-sm font-black mr-4 tracking-[0.2em] uppercase transition-colors ${
-            gameStatus === 'PLAYING' 
-              ? (lightColor === 'GREEN' ? 'text-[#14B8A6]' : 'text-[#E91E63] animate-pulse') 
+            isActionPhase 
+              ? (activeLight === 'GREEN' ? 'text-[#14B8A6]' : 'text-[#E91E63] animate-pulse') 
               : 'text-[#666]'
           }`}>
-            {gameStatus === 'LOBBY' && 'ESPERANDO...'}
+            {(!isTestMode && (gameStatus === 'LOBBY' || gameStatus === 'PRE_LOBBY')) && 'ESPERANDO...'}
             {gameStatus === 'STARTING' && 'PREPARANDO'}
-            {gameStatus === 'PLAYING' && (lightColor === 'GREEN' ? 'AVANZA' : 'DETENIDO')}
+            {isActionPhase && (activeLight === 'GREEN' ? (isTestMode ? 'PRUEBA: AVANZA' : 'AVANZA') : (isTestMode ? 'PRUEBA: DETENIDO' : 'DETENIDO'))}
           </span>
           
           {gameStatus === 'STARTING' && (
@@ -444,7 +446,7 @@ function App() {
           )}
         </div>
 
-        {(gameStatus === 'PRE_LOBBY' || gameStatus === 'LOBBY') && (
+        {(gameStatus === 'PRE_LOBBY' || gameStatus === 'LOBBY') && !isTestMode && (
           <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
             <div className="w-12 h-12 border-4 border-t-transparent border-[#14B8A6] rounded-full animate-spin mb-6"></div>
             <h2 className="text-xl md:text-2xl font-black text-[#14B8A6] tracking-[0.2em] mb-2 animate-pulse drop-shadow-[0_0_10px_rgba(20,184,166,0.3)]">
@@ -461,15 +463,15 @@ function App() {
             onPointerDown={() => handleStep('L')}
             className={`flex-1 border-r border-[#111] flex flex-col items-center justify-center transition-all cursor-pointer touch-none relative
               ${isStumbled ? 'bg-[#110000] grayscale opacity-50' : ''}
-              ${lightColor === 'GREEN' && expectedLeg === 'L' && !isStumbled && gameStatus === 'PLAYING' ? 'bg-[#14B8A6]/10 shadow-[inset_0_0_50px_rgba(20,184,166,0.1)]' : 'bg-transparent'}
+              ${activeLight === 'GREEN' && expectedLeg === 'L' && !isStumbled && isActionPhase ? 'bg-[#14B8A6]/10 shadow-[inset_0_0_50px_rgba(20,184,166,0.1)]' : 'bg-transparent'}
             `}
           >
-            {lightColor === 'RED' && expectedLeg === 'L' && gameStatus === 'PLAYING' && (
+            {activeLight === 'RED' && expectedLeg === 'L' && isActionPhase && (
               <span className="absolute top-1/4 text-[#14B8A6]/40 text-xs font-bold tracking-[0.2em] animate-pulse border border-[#14B8A6]/20 px-3 py-1 bg-black/50">PREPARAR</span>
             )}
             <span className={`text-8xl font-black transition-all duration-200 ${
-              expectedLeg === 'L' && gameStatus === 'PLAYING'
-                ? (lightColor === 'GREEN' ? 'text-[#14B8A6] scale-110 drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]' : 'text-[#333]') 
+              expectedLeg === 'L' && isActionPhase
+                ? (activeLight === 'GREEN' ? 'text-[#14B8A6] scale-110 drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]' : 'text-[#333]') 
                 : 'text-[#111]'
             }`}>L</span>
           </div>
@@ -482,12 +484,12 @@ function App() {
               onPointerUp={handleHoldEnd}
               onPointerLeave={handleHoldEnd}
               className={`w-full h-full rounded-full flex flex-col items-center justify-center border-4 transition-all touch-none relative bg-[#050505]
-                ${lightColor === 'RED' && gameStatus === 'PLAYING' 
+                ${activeLight === 'RED' && isActionPhase 
                   ? 'border-[#E91E63] shadow-[0_0_30px_rgba(233,30,99,0.3),inset_0_0_15px_rgba(233,30,99,0.2)]' 
                   : 'border-[#111] scale-75 opacity-30 pointer-events-none'}
               `}
             >
-              {lightColor === 'RED' && gameStatus === 'PLAYING' ? (
+              {activeLight === 'RED' && isActionPhase ? (
                 <>
                   <div className="absolute inset-0 rounded-full border border-[#E91E63]/20 animate-ping pointer-events-none"></div>
                   
@@ -522,15 +524,15 @@ function App() {
             onPointerDown={() => handleStep('R')}
             className={`flex-1 border-l border-[#111] flex flex-col items-center justify-center transition-all cursor-pointer touch-none relative
               ${isStumbled ? 'bg-[#110000] grayscale opacity-50' : ''}
-              ${lightColor === 'GREEN' && expectedLeg === 'R' && !isStumbled && gameStatus === 'PLAYING' ? 'bg-[#14B8A6]/10 shadow-[inset_0_0_50px_rgba(20,184,166,0.1)]' : 'bg-transparent'}
+              ${activeLight === 'GREEN' && expectedLeg === 'R' && !isStumbled && isActionPhase ? 'bg-[#14B8A6]/10 shadow-[inset_0_0_50px_rgba(20,184,166,0.1)]' : 'bg-transparent'}
             `}
           >
-            {lightColor === 'RED' && expectedLeg === 'R' && gameStatus === 'PLAYING' && (
+            {activeLight === 'RED' && expectedLeg === 'R' && isActionPhase && (
               <span className="absolute top-1/4 text-[#14B8A6]/40 text-xs font-bold tracking-[0.2em] animate-pulse border border-[#14B8A6]/20 px-3 py-1 bg-black/50">PREPARAR</span>
             )}
             <span className={`text-8xl font-black transition-all duration-200 ${
-              expectedLeg === 'R' && gameStatus === 'PLAYING'
-                ? (lightColor === 'GREEN' ? 'text-[#14B8A6] scale-110 drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]' : 'text-[#333]') 
+              expectedLeg === 'R' && isActionPhase
+                ? (activeLight === 'GREEN' ? 'text-[#14B8A6] scale-110 drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]' : 'text-[#333]') 
                 : 'text-[#111]'
             }`}>R</span>
           </div>

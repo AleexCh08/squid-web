@@ -144,6 +144,8 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  const [isTestMode, setIsTestMode] = useState(false);
+
   const isConnecting = useRef(false);
 
   useEffect(() => {
@@ -339,7 +341,7 @@ function App() {
   // PANTALLA DE CONEXIÓN
   if (gameStatus === "CONNECTING") {
     return (
-      <div style={{ width: '100vw', height: '100vh', backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0, backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '60px', height: '60px', border: '8px solid #E91E63', marginBottom: '30px', animation: 'spin 2s linear infinite', boxShadow: '8px 8px 0px #220000' }}></div>
         <h2 style={{ color: '#E91E63', fontFamily: 'sans-serif', fontWeight: '900', letterSpacing: '8px', animation: 'pulse 1.5s infinite', textShadow: '4px 4px 0px #220000' }}>
           SISTEMA INICIANDO
@@ -468,8 +470,63 @@ function App() {
               </div>
             </div>
 
+            <div style={{ marginTop: '20px', padding: '10px', background: '#050505', border: '2px solid #333', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ margin: '0 0 2px 0', color: playerCount > 0 ? 'white' : '#555', fontSize: '13px', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    PROBAR GAMEPAD
+                  </h4>
+                  <p style={{ margin: 0, color: playerCount > 0 ? '#14B8A6' : '#444', fontSize: '9px', fontWeight: 'bold', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                    {playerCount > 0 ? 'Enciende controles de prueba' : 'Requiere jugadores'}
+                  </p>
+                </div>
+                
+                <label style={{ 
+                  position: 'relative', display: 'inline-block', width: '40px', height: '20px', 
+                  cursor: playerCount > 0 ? 'pointer' : 'not-allowed', opacity: playerCount > 0 ? 1 : 0.5 
+                }}>
+                  <input 
+                    type="checkbox" 
+                    checked={isTestMode} 
+                    disabled={playerCount === 0}
+                    onChange={(e) => {
+                      if (playerCount === 0) return;
+                      audio.play('click', true);
+                      const active = e.target.checked;
+                      setIsTestMode(active);
+                      room?.send("CHANGE_LIGHT", { light: active ? "TEST_GREEN" : "RED" });
+                    }} 
+                    style={{ opacity: 0, width: 0, height: 0 }} 
+                  />
+                  <span style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: isTestMode ? '#14B8A6' : '#222',
+                    transition: '.2s',
+                    border: '1px solid #111'
+                  }}></span>
+                  <span style={{
+                    position: 'absolute', height: '14px', width: '14px', 
+                    left: isTestMode ? '21px' : '2px', bottom: '2px', 
+                    backgroundColor: isTestMode ? 'black' : '#666',
+                    transition: '.2s'
+                  }}></span>
+                </label>
+              </div>
+
+              {isTestMode && (
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '5px' }}>
+                  <button onClick={() => room?.send("CHANGE_LIGHT", { light: "TEST_GREEN" })} style={{ padding: '6px 15px', background: '#14B8A6', color: 'black', fontSize: '10px', fontWeight: '900', border: 'none', cursor: 'pointer', transition: 'all 0.1s' }}>
+                    LUZ VERDE
+                  </button>
+                  <button onClick={() => room?.send("CHANGE_LIGHT", { light: "TEST_RED" })} style={{ padding: '6px 15px', background: '#E91E63', color: 'black', fontSize: '10px', fontWeight: '900', border: 'none', cursor: 'pointer', transition: 'all 0.1s' }}>
+                    LUZ ROJA
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button 
-              onClick={() => { audio.play('click', true); setShowTutorial(false); }}
+              onClick={() => { audio.play('click', true); setShowTutorial(false); setIsTestMode(false); room?.send("CHANGE_LIGHT", { light: "RED" });}}
               style={{ width: '100%', padding: '20px', background: '#14B8A6', color: 'black', border: '4px solid #14B8A6', fontSize: '20px', fontWeight: '900', letterSpacing: '6px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '8px 8px 0px #0a221f', transition: 'all 0.1s' }}
             >
               Entendido

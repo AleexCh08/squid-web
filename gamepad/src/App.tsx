@@ -198,15 +198,12 @@ function App() {
       });
 
       newRoom.onLeave(() => {
-        setRoom(null);
-        setGameStatus("LOBBY");
-        setIsAlive(true);
-        setExpectedLeg('L');
-        setIsStumbled(false);
-        setIsHoldingBreath(false);
-        setTensionPoint(0);
-        setShowWarning(false);
-        alert("Desconectado de la partida. El Host cerró la sala o perdiste la conexión.");
+        setGameStatus("DISCONNECTED");
+
+        if (wakeLockRef.current !== null) {
+          wakeLockRef.current.release().catch(console.error);
+          wakeLockRef.current = null;
+        }
       });
 
     } catch (error: any) {
@@ -379,6 +376,31 @@ function App() {
         <div className="px-8 py-4 bg-transparent border-4 border-[#333] text-[#666] font-black text-xs tracking-[0.2em] uppercase relative z-10">
           ESPERANDO AL HOST...
         </div>
+      </div>
+    );
+  }
+
+  // ================= PANTALLA DE DESCONEXIÓN =================
+  if (gameStatus === "DISCONNECTED") {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#050505] p-6 text-center relative overflow-hidden font-sans">
+        
+        <div className="w-24 h-24 border-8 border-[#E91E63] mb-8 relative flex items-center justify-center shadow-[8px_8px_0px_#220000] z-10 bg-transparent rounded-full animate-pulse">
+          <div className="w-20 h-2 bg-[#E91E63] absolute transform -rotate-45"></div>
+          <div className="w-20 h-2 bg-[#E91E63] absolute transform rotate-45"></div>
+        </div>
+        
+        <h1 className="text-4xl md:text-5xl font-black text-[#E91E63] mb-4 tracking-[0.2em] relative z-10 drop-shadow-[4px_4px_0px_#220000]">
+          CONEXIÓN PERDIDA
+        </h1>
+        
+        <p className="text-[#666] text-xs font-bold mb-10 tracking-[0.2em] uppercase relative z-10 max-w-xs leading-relaxed">
+          EL SERVIDOR CERRÓ LA SALA O LA SEÑAL FUE INTERRUMPIDA.
+        </p>
+
+        <button onClick={() => window.location.reload()} className="px-8 py-4 bg-transparent border-4 border-[#E91E63] text-[#E91E63] font-black text-xs tracking-[0.2em] uppercase transition-all relative z-10 shadow-[6px_6px_0px_#220000] hover:shadow-[0px_0px_0px_#220000] hover:translate-y-1 hover:translate-x-1 hover:bg-[#E91E63] hover:text-black">
+          RECARGAR SISTEMA
+        </button>
       </div>
     );
   }

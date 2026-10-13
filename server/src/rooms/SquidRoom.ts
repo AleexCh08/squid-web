@@ -23,10 +23,11 @@ export class SquidRoom extends Room {
   private distancePerStep = 1.25; 
   private lightTimeout?: NodeJS.Timeout;
   private readonly FINISH_LINE_Z = 100;
+  private isGameOverHandled: boolean = false;
 
   private checkGameOver() {
-    const state = this.state as GameState;
-    if (state.status !== "PLAYING") return;
+    const state = this.state;
+    if (state.status !== "PLAYING" || this.isGameOverHandled) return;
 
     let anyAlive = false;
     state.players.forEach(p => { 
@@ -34,6 +35,7 @@ export class SquidRoom extends Room {
     });
 
     if (!anyAlive) {
+      this.isGameOverHandled = true; 
       state.status = "GAME_OVER";
       if (this.lightTimeout) clearTimeout(this.lightTimeout);
       this.unlock(); 
@@ -60,8 +62,8 @@ export class SquidRoom extends Room {
     });
 
     this.onMessage("STEP", (client, message) => {
-      const state = this.state as GameState;
-      if (state.status !== "PLAYING") return;
+      const state = this.state;
+      if (state.status !== "PLAYING" || this.isGameOverHandled) return;
       
       const player = state.players.get(client.sessionId);
       if (!player || !player.isAlive) return;
@@ -75,6 +77,7 @@ export class SquidRoom extends Room {
       player.zPos += this.distancePerStep;
 
       if (player.zPos >= this.FINISH_LINE_Z) {
+        this.isGameOverHandled = true; 
         state.status = "GAME_OVER";
         if (this.lightTimeout) clearTimeout(this.lightTimeout);
         this.unlock();
@@ -118,6 +121,7 @@ export class SquidRoom extends Room {
       
       state.status = "LOBBY";
       state.light = "RED";
+      this.isGameOverHandled = false;
       
       state.players.forEach(player => {
         player.isAlive = true;

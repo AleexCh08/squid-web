@@ -1,5 +1,7 @@
 class SoundEngine {
   private sounds: Record<string, HTMLAudioElement> = {};
+  private baseVolumes: Record<string, number> = {};
+  private fadeIntervals: Record<string, number> = {}; 
   private isMuted: boolean = false;
 
   constructor() {
@@ -35,6 +37,10 @@ class SoundEngine {
 
     this.sounds.join.loop = false;
     this.sounds.join.volume = 0.7;
+
+    Object.keys(this.sounds).forEach(key => {
+      this.baseVolumes[key] = this.sounds[key].volume;
+    });
   }
 
   // Activar o desactivar el audio maestro
@@ -49,25 +55,62 @@ class SoundEngine {
   public play(name: keyof typeof this.sounds, forceRestart: boolean = false) {
     if (this.isMuted || !this.sounds[name]) return;
 
+    if (this.fadeIntervals[name]) {
+      clearInterval(this.fadeIntervals[name]);
+      delete this.fadeIntervals[name];
+    }
+    this.sounds[name].volume = this.baseVolumes[name];
+
     if (forceRestart) {
       this.sounds[name].currentTime = 0;
     }
     this.sounds[name].play().catch(e => console.warn(`Navegador bloqueó el audio ${name}:`, e));
   }
 
-  // Detener un sonido específico
-  public stop(name: keyof typeof this.sounds) {
-    if (this.sounds[name]) {
-      this.sounds[name].pause();
-      this.sounds[name].currentTime = 0;
+  // Detener un sonido con fade-out
+  public stop(name: keyof typeof this.sounds, fadeDuration: number = 1000) {
+    const sound = this.sounds[name];
+    if (!sound) return;
+
+    if (this.fadeIntervals[name]) clearInterval(this.fadeIntervals[name]);
+
+    if (fadeDuration <= 0 || sound.paused || sound.volume === 0) {
+      sound.pause();
+      sound.currentTime = 0;
+      sound.volume = this.baseVolumes[name];
+      return;
     }
+
+    const steps = 20; 
+    const stepTime = fadeDuration / steps;
+    const volumeStep = sound.volume / steps;
+    let currentStep = 0;
+
+    this.fadeIntervals[name] = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        clearInterval(this.fadeIntervals[name]);
+        delete this.fadeIntervals[name];
+        sound.pause();
+        sound.currentTime = 0;
+        sound.volume = this.baseVolumes[name]; 
+      } else {
+        sound.volume = Math.max(0, sound.volume - volumeStep);
+      }
+    }, stepTime);
   }
 
-  // Botón de pánico: detener todo
+  // Botón de pánico: detener todo inmediatamente
   public stopAll() {
-    Object.values(this.sounds).forEach(audio => {
-      audio.pause();
-      audio.currentTime = 0;
+    Object.keys(this.sounds).forEach(key => {
+      if (this.fadeIntervals[key]) {
+        clearInterval(this.fadeIntervals[key]);
+        delete this.fadeIntervals[key];
+      }
+      const audioElement = this.sounds[key];
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      audioElement.volume = this.baseVolumes[key] || 1;
     });
   }
 }

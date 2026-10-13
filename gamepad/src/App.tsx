@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Client, Room } from 'colyseus.js';
 
 const isLocal = window.location.hostname === "localhost" || window.location.hostname.startsWith("192.168.") || window.location.hostname.startsWith("10.");
@@ -28,6 +28,8 @@ function App() {
   const [isHoldingBreath, setIsHoldingBreath] = useState(false);
   const [tensionPoint, setTensionPoint] = useState(0); 
   const [showWarning, setShowWarning] = useState(false); 
+
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   
   const touchStartX = useRef(0);
   const currentDrag = useRef(0); 
@@ -41,6 +43,21 @@ function App() {
     if (!urlParams.get('room')) {
       setGameStatus("INVALID_ROOM");
     }
+
+    const preventContextMenu = (e: Event) => e.preventDefault();
+    document.addEventListener("contextmenu", preventContextMenu);
+
+    document.body.style.setProperty('-webkit-touch-callout', 'none');
+    
+    window.history.pushState(null, "", window.location.href);
+    const preventBack = () => window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", preventBack);
+
+    return () => {
+      document.removeEventListener("contextmenu", preventContextMenu);
+      window.removeEventListener("popstate", preventBack);
+      document.body.style.removeProperty('-webkit-touch-callout');
+    };
   }, []);
 
   // Blindaje de Input
@@ -220,7 +237,11 @@ function App() {
 
     } catch (error: any) {
       console.error("Error al conectar:", error);
-      setGameStatus("INVALID_ROOM");
+      if (error.message === "NUMERO_DUPLICADO") {
+        setShowDuplicateModal(true);
+      } else {
+        setGameStatus("INVALID_ROOM");
+      }
     }
   };
 
@@ -291,6 +312,32 @@ function App() {
     const isValidPlayer = playerName.trim().length > 0;
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] p-6 text-white font-sans overflow-hidden m-0">
+        {/* MODAL DE NÚMERO DUPLICADO */}
+        {showDuplicateModal && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 p-6 backdrop-blur-sm">
+            <div className="bg-[#050505] border-4 border-[#E91E63] p-8 w-full max-w-sm text-center shadow-[10px_10px_0px_#220000]">
+              <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 border-4 border-[#E91E63] flex items-center justify-center rotate-45 bg-[#220000]">
+                  <span className="text-[#E91E63] font-black text-2xl -rotate-45">!</span>
+                </div>
+              </div>
+              
+              <h2 className="text-[#E91E63] text-2xl font-black mb-2 tracking-[0.2em]">NÚMERO EN USO</h2>
+              
+              <p className="text-white text-xs font-bold mb-8 tracking-widest leading-relaxed">
+                EL SUJETO #{playerName || "000"} YA SE ENCUENTRA REGISTRADO.
+              </p>
+              
+              <button 
+                onClick={() => setShowDuplicateModal(false)}
+                className="w-full bg-[#E91E63] text-black border-4 border-[#E91E63] py-4 font-black text-lg tracking-[0.2em] uppercase transition-all shadow-[6px_6px_0px_#220000] active:translate-y-1 active:shadow-none"
+              >
+                REINTENTAR
+              </button>
+            </div>
+          </div>
+        )}
+        
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none flex flex-col justify-between">
           <div className="w-full h-1 bg-[#E91E63]"></div>
           <div className="w-full h-1 bg-[#E91E63]"></div>

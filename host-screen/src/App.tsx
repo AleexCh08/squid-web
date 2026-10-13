@@ -148,6 +148,35 @@ function App() {
 
   const isConnecting = useRef(false);
 
+  // Evitar que la pantalla del Host se apague (Wake Lock API)
+  useEffect(() => {
+    let wakeLock: any = null;
+    
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+          console.log('[SISTEMA] Wake Lock activado: La pantalla no se apagará.');
+        }
+      } catch (err: any) {
+        console.warn(`[SISTEMA] Wake Lock bloqueado por el navegador: ${err.message}`);
+      }
+    };
+
+    requestWakeLock();
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') requestWakeLock();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (wakeLock) wakeLock.release();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   useEffect(() => {
     audio.setMuted(!soundEnabled);
   }, [soundEnabled]);

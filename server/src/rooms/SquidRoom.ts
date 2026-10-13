@@ -24,6 +24,7 @@ export class SquidRoom extends Room {
   private lightTimeout?: NodeJS.Timeout;
   private readonly FINISH_LINE_Z = 100;
   private isGameOverHandled: boolean = false;
+  private hostDisconnectTimeout?: NodeJS.Timeout;
 
   private checkGameOver() {
     const state = this.state;
@@ -177,8 +178,18 @@ export class SquidRoom extends Room {
 
     if (data.name === "HOST_ADMIN") {
       client.userData = { isHost: true };
+      if (this.hostDisconnectTimeout) clearTimeout(this.hostDisconnectTimeout);
       console.log(`[SISTEMA] Host conectado. Sala blindada.`);
     } else {
+      let isDuplicate = false;
+      this.state.players.forEach((p) => {
+        if (p.name === data.name) isDuplicate = true;
+      });
+
+      if (isDuplicate) {
+        throw new Error("NUMERO_DUPLICADO");
+      }
+
       const player = new Player();
       player.name = data.name || "000"; 
       player.gender = data.gender || "M";
@@ -190,28 +201,27 @@ export class SquidRoom extends Room {
   }
 
   onLeave(client: Client, code?: number) {
-    if (client.userData?.isHost) {
-      console.log(`[SISTEMA] Host desconectado. Destruyendo sala ${this.roomId}`);
-      this.disconnect(); 
-    } else {
-      const state = this.state as GameState;
-      const player = state.players.get(client.sessionId);
+    const state = this.state as GameState;
+    const player = state.players.get(client.sessionId);
+    const isHost = client.userData?.isHost || player?.name === "HOST_ADMIN";
 
-      if (player) {
-        if (player.name === "HOST_ADMIN") {
-          console.log("[SISTEMA] Host desconectado. Destruyendo la sala...");
-          this.disconnect(); 
-          return;
-        }
-        
-        console.log(`[LEAVE] ${player.name} abandonó la partida.`);
+    if (isHost) {
+      console.log(`[SISTEMA] Host desconectado. Iniciando cuenta regresiva de 10s...`);
+      this.hostDisconnectTimeout = setTimeout(() => {
+        console.log(`[SISTEMA] Tiempo agotado. Destruyendo sala fantasma ${this.roomId}`);
+        this.disconnect();
+      }, 10000);
+      return;
+    }
 
-        if (state.status === "PLAYING" || state.status === "STARTING") {
-          player.isAlive = false;
-          this.checkGameOver(); 
-        } else {
-          state.players.delete(client.sessionId);
-        }
+    if (player) {
+      console.log(`[LEAVE] ${player.name} abandonó la partida.`);
+
+      if (state.status === "PLAYING" || state.status === "STARTING") {
+        player.isAlive = false;
+        this.checkGameOver(); 
+      } else {
+        state.players.delete(client.sessionId);
       }
     }
   }

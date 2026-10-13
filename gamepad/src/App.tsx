@@ -33,7 +33,15 @@ function App() {
   const currentDrag = useRef(0); 
   
   const outCenterTimer = useRef(0); 
-  const isWarningRef = useRef(false); 
+  const isWarningRef = useRef(false);
+
+  // Verificar si hay un ID de sala en la URL al cargar
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.get('room')) {
+      setGameStatus("INVALID_ROOM");
+    }
+  }, []);
 
   // Blindaje de Input
   const handleNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,7 +220,7 @@ function App() {
 
     } catch (error: any) {
       console.error("Error al conectar:", error);
-      alert(error.message || "Error desconocido al conectar.");
+      setGameStatus("INVALID_ROOM");
     }
   };
 
@@ -255,6 +263,28 @@ function App() {
       if (!isTestMode) { setIsAlive(false); room?.send("PLAYER_DIED"); }
     }
   };
+
+  // ================= PANTALLA DE ACCESO DENEGADO (SALA MUERTA) =================
+  if (gameStatus === "INVALID_ROOM") {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] p-6 text-center overflow-hidden font-sans m-0">
+        
+        <div className="w-24 h-24 border-8 border-[#E91E63] mb-8 relative flex items-center justify-center shadow-[8px_8px_0px_#220000] z-10 bg-transparent rounded-full opacity-50">
+          <div className="w-20 h-2 bg-[#E91E63] absolute transform -rotate-45"></div>
+          <div className="w-20 h-2 bg-[#E91E63] absolute transform rotate-45"></div>
+        </div>
+        
+        <h1 className="text-4xl md:text-5xl font-black text-[#E91E63] mb-4 tracking-[0.2em] relative z-10 drop-shadow-[4px_4px_0px_#220000]">
+          ACCESO DENEGADO
+        </h1>
+        
+        <p className="text-[#666] text-xs font-bold tracking-[0.2em] uppercase relative z-10 max-w-xs leading-relaxed">
+          LA SALA NO EXISTE O EL HOST HA CERRADO LA SESIÓN.<br/><br/>
+          VUELVE A ESCANEAR UN CÓDIGO QR VÁLIDO.
+        </p>
+      </div>
+    );
+  }
 
   // ================= PANTALLA DE INGRESO =================
   if (!room) {

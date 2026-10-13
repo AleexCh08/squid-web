@@ -341,11 +341,67 @@ function App() {
   // PANTALLA DE CONEXIÓN
   if (gameStatus === "CONNECTING") {
     return (
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0, backgroundColor: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '60px', height: '60px', border: '8px solid #E91E63', marginBottom: '30px', animation: 'spin 2s linear infinite', boxShadow: '8px 8px 0px #220000' }}></div>
-        <h2 style={{ color: '#E91E63', fontFamily: 'sans-serif', fontWeight: '900', letterSpacing: '8px', animation: 'pulse 1.5s infinite', textShadow: '4px 4px 0px #220000' }}>
-          SISTEMA INICIANDO
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0, backgroundColor: '#050505', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+        <style>{`
+          @keyframes spin_cw {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes spin_ccw {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+          }
+          @keyframes loading_shapes {
+            0% { opacity: 0.4; transform: scale(0.9) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.15) rotate(180deg); }
+            100% { opacity: 0.4; transform: scale(0.9) rotate(360deg); }
+          }
+          @keyframes pulse_neon {
+            0%, 100% { opacity: 0.9; text-shadow: 0 0 10px rgba(233, 30, 99, 0.4); }
+            50% { opacity: 0.4; text-shadow: 0 0 20px rgba(233, 30, 99, 0.7); }
+          }
+        `}</style>
+        
+        <h1 style={{ fontSize: '40px', color: '#E91E63', margin: '0 0 5px 0', letterSpacing: '15px', fontWeight: '900', textShadow: '4px 4px 0px #220000', lineHeight: '1.1', textAlign: 'center' }}>
+          SQUID <span style={{ color: 'white', textShadow: '4px 4px 0px #333' }}>GAME</span>
+        </h1>
+
+        <h2 style={{ color: '#E91E63', fontFamily: 'sans-serif', fontWeight: '900', fontSize: '13px', letterSpacing: '6px', animation: 'pulse_neon 1.5s infinite', margin: '0 0 40px 0' }}>
+          INICIANDO SISTEMA
         </h2>
+
+        <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            border: '4px dashed #E91E63', animation: 'spin_cw 8s linear infinite',
+            boxShadow: '0 0 20px rgba(233,30,99,0.3), inset 0 0 20px rgba(233,30,99,0.1)'
+          }} />
+          
+          <div style={{
+            position: 'absolute', inset: '12px', borderRadius: '50%',
+            border: '3px dotted #14B8A6', animation: 'spin_ccw 4s linear infinite',
+            opacity: 0.8
+          }} />
+
+          <div style={{
+            position: 'absolute', inset: '24px', borderRadius: '50%',
+            border: '2px solid #222', background: '#090909',
+            boxShadow: 'inset 0 0 15px rgba(0,0,0,0.8)'
+          }} />
+
+          <div style={{
+            position: 'absolute', width: '45px', height: '45px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'loading_shapes 4s ease-in-out infinite'
+          }}>
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px #E91E63)' }}>
+              <circle cx="28" cy="76" r="14" stroke="#14B8A6" strokeWidth="8" />
+              <polygon points="50,15 24,60 76,60" stroke="#E91E63" strokeWidth="8" strokeLinejoin="miter" />
+              <rect x="54" y="54" width="24" height="24" stroke="white" strokeWidth="8" />
+            </svg>
+          </div>
+        </div>
       </div>
     );
   }

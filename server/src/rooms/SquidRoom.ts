@@ -130,26 +130,37 @@ export class SquidRoom extends Room {
       
       state.status = "LOBBY";
       state.light = "RED";
-      this.isGameOverHandled = false;
+      this.isGameOverHandled = false; 
       
-      state.players.forEach(player => {
-        player.isAlive = true;
-        player.zPos = 0;
+      const activeSessions = new Set(this.clients.map(c => c.sessionId));
+      state.players.forEach((player, sessionId) => {
+        if (!activeSessions.has(sessionId) && player.name !== "HOST_ADMIN") {
+          state.players.delete(sessionId);
+        } else {
+          player.isAlive = true;
+          player.zPos = 0;
+        }
       });
       
       this.unlock();
     });
 
     this.onMessage("RETURN_TO_QR", (client, message) => {
-      const state = this.state;
+      const state = this.state as GameState;
       if (this.lightTimeout) clearTimeout(this.lightTimeout);
       
       state.status = "PRE_LOBBY";
       state.light = "RED";
+      this.isGameOverHandled = false; 
       
-      state.players.forEach(player => {
-        player.isAlive = true;
-        player.zPos = 0;
+      const activeSessions = new Set(this.clients.map(c => c.sessionId));
+      state.players.forEach((player, sessionId) => {
+        if (!activeSessions.has(sessionId) && player.name !== "HOST_ADMIN") {
+          state.players.delete(sessionId);
+        } else {
+          player.isAlive = true;
+          player.zPos = 0;
+        }
       });
       
       this.unlock(); 
@@ -158,6 +169,15 @@ export class SquidRoom extends Room {
     this.onMessage("CHANGE_LIGHT", (client, data: { light: string }) => {
       const state = this.state as GameState;
       state.light = data.light;
+    });
+
+    this.onMessage("KICK_PLAYER", (client, data: { sessionId: string }) => {
+      const targetClient = this.clients.find(c => c.sessionId === data.sessionId);
+      if (targetClient) {
+        targetClient.leave(); 
+      } else {
+        this.state.players.delete(data.sessionId);
+      }
     });
   }
 

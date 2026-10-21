@@ -693,13 +693,27 @@ function App() {
               </div>
               
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1, paddingRight: '10px' }}>
-                {Object.values(players).length === 0 ? (
+                {Object.keys(players).length === 0 ? (
                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontWeight: '900', letterSpacing: '4px', textAlign: 'center' }}>ESPERANDO CONEXIONES...</div>
                 ) : (
-                  Object.values(players).map((p: any, i) => (
-                    <div key={i} style={{ background: 'black', border: '4px solid #E91E63', padding: '15px 20px', color: '#E91E63', fontWeight: '900', letterSpacing: '4px', fontSize: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  Object.entries(players).map(([sessionId, p]: [string, any]) => (
+                    <div key={sessionId} style={{ background: 'black', border: '4px solid #E91E63', padding: '15px 20px', color: '#E91E63', fontWeight: '900', letterSpacing: '4px', fontSize: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>#{p.name}</span>
-                      <span style={{ fontSize: '10px', color: '#666', border: '2px solid #333', padding: '4px 8px' }}>{p.gender}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <span style={{ fontSize: '10px', color: '#666', border: '2px solid #333', padding: '4px 8px' }}>{p.gender}</span>
+                        <button 
+                          onClick={() => { 
+                            audio.play('click', true); 
+                            room?.send("KICK_PLAYER", { sessionId }); 
+                          }}
+                          style={{ background: '#E91E63', color: 'black', border: 'none', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontWeight: '900', fontSize: '14px', transition: 'transform 0.1s' }}
+                          title="Expulsar jugador"
+                          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
+                          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                          X
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}

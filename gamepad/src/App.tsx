@@ -226,8 +226,12 @@ function App() {
         }
       });
 
-      newRoom.onLeave(() => {
-        setGameStatus("DISCONNECTED");
+      newRoom.onLeave((code) => {
+        if (code === 1000) {
+          setGameStatus("INVALID_ROOM"); 
+        } else {
+          setGameStatus("DISCONNECTED"); 
+        }
 
         if (wakeLockRef.current !== null) {
           wakeLockRef.current.release().catch(console.error);

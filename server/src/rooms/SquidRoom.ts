@@ -25,6 +25,7 @@ export class SquidRoom extends Room {
   private readonly FINISH_LINE_Z = 100;
   private isGameOverHandled: boolean = false;
   private hostDisconnectTimeout?: NodeJS.Timeout;
+  private renderPingInterval?: NodeJS.Timeout;
 
   private checkGameOver() {
     const state = this.state;
@@ -46,9 +47,13 @@ export class SquidRoom extends Room {
   onCreate(options: any) {
     this.setState(new GameState());
 
+    this.renderPingInterval = setInterval(() => {
+      this.broadcast("HEARTBEAT");
+    }, 30000);
+
     this.onMessage("SET_DIFFICULTY", (client, data: { level: string, distance: number }) => {
       const state = this.state as GameState;
-      if (state.status === "PRE_LOBBY") {
+      if (state.status === "PRE_LOBBY" || state.status === "LOBBY") {
         state.difficulty = data.level;
         this.distancePerStep = data.distance;
         console.log(`[SISTEMA] Dificultad cambiada a: ${data.level} (Paso: ${data.distance})`);
@@ -106,13 +111,16 @@ export class SquidRoom extends Room {
       const state = this.state as GameState;
       if (state.status !== "LOBBY") return; 
       
-      state.status = "STARTING"; 
+      state.status = "STARTING";
+      this.isGameOverHandled = false;
       this.lock(); 
       
       setTimeout(() => {
-        state.status = "PLAYING";
-        state.light = "GREEN";
-        this.lightTimeout = setTimeout(() => this.runLightCycle(), 6000); 
+        if (state.status === "STARTING") {
+          state.status = "PLAYING";
+          state.light = "GREEN";
+          this.lightTimeout = setTimeout(() => this.runLightCycle(), 6000); 
+        } 
       }, 3000);
     });
 
@@ -224,5 +232,12 @@ export class SquidRoom extends Room {
         state.players.delete(client.sessionId);
       }
     }
+  }
+
+  onDispose() {
+    if (this.renderPingInterval) clearInterval(this.renderPingInterval);
+    if (this.lightTimeout) clearTimeout(this.lightTimeout);
+    if (this.hostDisconnectTimeout) clearTimeout(this.hostDisconnectTimeout);
+    console.log(`[SISTEMA] Sala ${this.roomId} destruida y memoria liberada.`);
   }
 }
